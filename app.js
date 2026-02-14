@@ -133,10 +133,7 @@ function initChart() {
       maintainAspectRatio: false,
       animation: { duration: 220 },
       plugins: {
-        legend: {
-          position: 'top',
-          labels: { color: '#666', font: { size: 10.5 }, padding: 12, usePointStyle: true, pointStyleWidth: 9 },
-        },
+        legend: { display: false },
         tooltip: { enabled: false },
         datalabels: {
           color: '#777',
