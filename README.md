@@ -2,7 +2,9 @@
 
 **Interactive bubble chart for comparing local LLM inference hardware.**
 
-🔗 **[vramora.com](https://vramora.com)** (launching soon)
+🔗 **[vramora.com](https://vramora.com)**
+
+![VRAMora preview](og.png)
 
 ---
 

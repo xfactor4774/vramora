@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VRAMora OG</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  width:1200px;height:630px;overflow:hidden;
+  background:#0f0f13;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  display:flex;flex-direction:column;
+}
+
+/* header bar */
+.hd{
+  display:flex;align-items:center;gap:14px;
+  padding:22px 40px 16px;border-bottom:1px solid #1e1e2e;
+  flex-shrink:0;
+}
+.logo{display:flex;align-items:center;gap:10px}
+.lm{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,#7c6af7,#5eead4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+}
+.lt{font-size:1.55rem;font-weight:800;color:#fff;letter-spacing:-.03em}
+.lt span{color:#7c6af7}
+.tag{
+  font-size:.82rem;color:#444;
+  border-left:1px solid #222;padding-left:14px;
+}
+
+/* pill badges */
+.pills{margin-left:auto;display:flex;gap:8px}
+.pill{
+  padding:4px 12px;border-radius:20px;font-size:.68rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.06em;
+}
+
+/* chart */
+.chart-wrap{flex:1;padding:10px 40px 20px;position:relative}
+
+/* stat row */
+.stats{
+  display:flex;gap:0;border-top:1px solid #1e1e2e;flex-shrink:0;
+}
+.st{
+  flex:1;padding:12px 22px;border-right:1px solid #1e1e2e;
+}
+.st:last-child{border-right:none}
+.st .lb{font-size:.6rem;color:#333;text-transform:uppercase;letter-spacing:.1em}
+.st .vl{font-size:.95rem;font-weight:700;color:#e2e2e2;margin-top:2px}
+.st .sb{font-size:.62rem;color:#3a3a5a;margin-top:1px}
+
+/* url */
+.url-bar{
+  position:absolute;bottom:18px;right:40px;
+  font-size:.72rem;color:#333;letter-spacing:.02em;
+}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="logo">
+    <div class="lm">⚡</div>
+    <div class="lt">VRAM<span>ora</span></div>
+  </div>
+  <div class="tag">Local LLM inference hardware, visualized</div>
+  <div class="pills">
+    <span class="pill" style="background:#5eead422;color:#5eead4">21+ Setups</span>
+    <span class="pill" style="background:#a78bfa22;color:#a78bfa">Cost vs Speed</span>
+    <span class="pill" style="background:#fb923c22;color:#fb923c">Power Aware</span>
+    <span class="pill" style="background:#7c6af722;color:#7c6af7">What Can I Run?</span>
+  </div>
+</div>
+
+<div class="chart-wrap">
+  <canvas id="chart"></canvas>
+  <div class="url-bar">vramora.com</div>
+</div>
+
+<div class="stats">
+  <div class="st">
+    <div class="lb">Best Value</div>
+    <div class="vl">RTX 3090</div>
+    <div class="sb">71.2 t/s per $1k</div>
+  </div>
+  <div class="st">
+    <div class="lb">Fastest 7B</div>
+    <div class="vl">RTX 5090</div>
+    <div class="sb">186 t/s at 7B Q4</div>
+  </div>
+  <div class="st">
+    <div class="lb">Most Efficient</div>
+    <div class="vl">M4 Max Studio</div>
+    <div class="sb">1.45 t/s/W · 55W TDP</div>
+  </div>
+  <div class="st">
+    <div class="lb">Most Memory</div>
+    <div class="vl">M3 Ultra (256GB)</div>
+    <div class="sb">256 GB unified</div>
+  </div>
+  <div class="st">
+    <div class="lb">Biggest Model</div>
+    <div class="vl">DGX Spark / Dell GB10</div>
+    <div class="sb">~200B params at Q4</div>
+  </div>
+</div>
+
+<script>
+// Inline mini dataset for the OG chart
+const DATA = [
+  {name:'RTX 3060',    cost:1300, maxB:7,   tps:60,  tdp:220},
+  {name:'RTX 3080 Ti', cost:1600, maxB:7,   tps:108, tdp:320},
+  {name:'RTX 4080',    cost:2100, maxB:13,  tps:113, tdp:290},
+  {name:'RTX 3090',    cost:1700, maxB:30,  tps:121, tdp:490},
+  {name:'RTX 4090',    cost:3500, maxB:30,  tps:139, tdp:480},
+  {name:'RTX 5090',    cost:4200, maxB:30,  tps:186, tdp:575},
+  {name:'A6000',       cost:6500, maxB:65,  tps:107, tdp:450},
+  {name:'2× 3090',     cost:3400, maxB:65,  tps:121, tdp:830},
+  {name:'2× 4090',     cost:6500, maxB:70,  tps:139, tdp:810},
+  {name:'3× 3090',     cost:5200, maxB:120, tps:121, tdp:1170},
+  {name:'M3 Max 48GB', cost:3999, maxB:65,  tps:66,  tdp:50},
+  {name:'M4 Max 64GB', cost:4999, maxB:70,  tps:80,  tdp:55},
+  {name:'M4 Max 128GB',cost:7199, maxB:120, tps:80,  tdp:60},
+  {name:'M2 Ultra',    cost:6999, maxB:180, tps:94,  tdp:90},
+  {name:'M3 Ultra',    cost:9999, maxB:200, tps:105, tdp:110},
+  {name:'M4 Ultra',    cost:8999, maxB:180, tps:120, tdp:100},
+  {name:'DGX Spark',   cost:3999, maxB:200, tps:60,  tdp:120},
+  {name:'Dell GB10',   cost:4600, maxB:200, tps:60,  tdp:125},
+  {name:'4× Mini',     cost:5200, maxB:90,  tps:70,  tdp:160},
+  {name:'8× Mini',     cost:10400,maxB:180, tps:70,  tdp:320},
+  {name:'RTX 4000 Ada',cost:2200, maxB:13,  tps:65,  tdp:200},
+];
+
+function pwColor(tdp, a=0.75) {
+  const t = Math.min(1,(tdp-40)/1160);
+  let r,g,b;
+  if(t<.5){const s=t/.5;r=Math.round(34+(234-34)*s);g=Math.round(197+(179-197)*s);b=Math.round(94+(8-94)*s);}
+  else{const s=(t-.5)/.5;r=Math.round(234+(239-234)*s);g=Math.round(179+(68-179)*s);b=Math.round(8+(68-8)*s);}
+  return `rgba(${r},${g},${b},${a})`;
+}
+function pwHex(tdp) {
+  const t=Math.min(1,(tdp-40)/1160);
+  let r,g,b;
+  if(t<.5){const s=t/.5;r=Math.round(34+(234-34)*s);g=Math.round(197+(179-197)*s);b=Math.round(94+(8-94)*s);}
+  else{const s=(t-.5)/.5;r=Math.round(234+(239-234)*s);g=Math.round(179+(68-179)*s);b=Math.round(8+(68-8)*s);}
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+function bR(t){return t?5+Math.pow(t,.55)*.85:5}
+
+const ctx = document.getElementById('chart').getContext('2d');
+new Chart(ctx, {
+  type:'bubble',
+  data:{
+    datasets:[{
+      data: DATA.map(d=>({x:d.cost,y:d.maxB,r:bR(d.tps),_raw:d})),
+      backgroundColor: DATA.map(d=>pwColor(d.tdp,0.78)),
+      borderColor:     DATA.map(d=>pwHex(d.tdp)),
+      borderWidth: 1,
+    }]
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    animation:{duration:0},
+    plugins:{
+      legend:{display:false},
+      tooltip:{enabled:false},
+    },
+    scales:{
+      x:{
+        title:{display:true,text:'System Cost (USD)',color:'#3a3a5a',font:{size:11}},
+        ticks:{color:'#2a2a3a',callback:v=>'$'+v.toLocaleString(),font:{size:10}},
+        grid:{color:'#141420'},
+        border:{color:'#1e1e2e'},
+      },
+      y:{
+        title:{display:true,text:'Max Model Size (B params, Q4)',color:'#3a3a5a',font:{size:11}},
+        ticks:{color:'#2a2a3a',callback:v=>v+'B',font:{size:10}},
+        grid:{color:'#141420'},
+        border:{color:'#1e1e2e'},
+      },
+    },
+  }
+});
+</script>
+</body>
+</html>
