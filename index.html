@@ -20,7 +20,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0f13;color:#e2e2e2;min-height:100vh}
+
+/* ── DARK MODE (default) ── */
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0f13;color:#e2e2e2;min-height:100vh;transition:background .2s,color .2s}
 header{padding:14px 32px 12px;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .logo-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#7c6af7,#5eead4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
@@ -30,6 +32,52 @@ header{padding:14px 32px 12px;border-bottom:1px solid #1e1e2e;display:flex;align
 .header-right{margin-left:auto;display:flex;align-items:center;gap:12px}
 .gh-link{font-size:.72rem;color:#555;text-decoration:none;padding:4px 10px;border:1px solid #222;border-radius:6px;transition:all .15s}
 .gh-link:hover{color:#aaa;border-color:#444}
+
+/* theme toggle */
+.theme-btn{background:none;border:1px solid #222;color:#555;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.72rem;transition:all .15s}
+.theme-btn:hover{color:#aaa;border-color:#444}
+
+/* ── LIGHT MODE ── */
+body.light{background:#faf9f7;color:#1a1a2e}
+body.light header{border-bottom-color:#e8e4de}
+body.light .logo-text{color:#1a1a2e}
+body.light .tagline{color:#9e8e7e;border-left-color:#e8e4de}
+body.light .gh-link{color:#9e8e7e;border-color:#e8e4de}
+body.light .gh-link:hover{color:#5c4a3a;border-color:#c9b99a}
+body.light .theme-btn{color:#9e8e7e;border-color:#e8e4de}
+body.light .theme-btn:hover{color:#5c4a3a;border-color:#c9b99a}
+
+body.light .sidebar{background:#f4f0ea;border-right-color:#e8e4de}
+body.light .sb h3{color:#c9b99a}
+body.light .fl label{color:#6b5a4a}
+body.light .fl label:hover{color:#2d1f10}
+body.light .pw-lbl{color:#c9b99a}
+body.light .bub-row{color:#b0a090}
+body.light .bub-c{background:#d4ccc4}
+
+body.light .toolbar{border-bottom-color:#e8e4de}
+body.light .toolbar label{color:#9e8e7e}
+body.light .toolbar select{background:#fff;border-color:#e8e4de;color:#3d2b1a}
+body.light .vt{background:#fff;border-color:#e8e4de}
+body.light .vb{color:#9e8e7e}
+body.light .vb.active{background:#d97706;color:#fff}
+
+body.light .model-banner{background:#fdf6e3;border-bottom-color:#f0e0b0;color:#92610a}
+body.light .model-banner button{border-color:#f0e0b0;color:#b08040}
+body.light .share-btn{color:#d97706;border-color:#f0e0b0}
+body.light .share-btn:hover{background:#d97706;color:#fff}
+
+body.light table thead th{background:#f4f0ea;color:#c9b99a;border-bottom-color:#e8e4de}
+body.light table thead th:hover{color:#7a6050}
+body.light table thead th.sorted{color:#d97706}
+body.light table tbody td{border-bottom-color:#ede8e1;color:#6b5a4a}
+body.light table tbody tr:hover td{background:#ede8e1}
+body.light .nm{color:#2d1f10}
+
+body.light .stat-row .sc{background:#f4f0ea;border-color:#e8e4de}
+body.light .sc .lb{color:#c9b99a}
+body.light .sc .vl{color:#2d1f10}
+body.light .sc .sb2{color:#b0a090}
 .layout{display:flex;height:calc(100vh - 68px)}
 
 /* ── SIDEBAR ── */
@@ -114,6 +162,7 @@ tbody tr:hover td{background:#13131c}
   </a>
   <p class="tagline">Local LLM inference hardware, visualized &nbsp;·&nbsp; bubble = speed &nbsp;·&nbsp; <span style="color:#22c55e">■</span> green = efficient &nbsp;→&nbsp; <span style="color:#ef4444">■</span> red = power hungry &nbsp;·&nbsp; hover for full specs</p>
   <div class="header-right">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
     <a class="gh-link" href="https://github.com/xfactor4774/vramora" target="_blank">★ GitHub</a>
   </div>
 </header>

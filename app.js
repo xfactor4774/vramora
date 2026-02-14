@@ -136,11 +136,13 @@ function initChart() {
         legend: { display: false },
         tooltip: { enabled: false },
         datalabels: {
-          color: '#777',
-          font: { size: 9, family: '-apple-system, BlinkMacSystemFont, sans-serif' },
+          color: (ctx) => document.body.classList.contains('light') ? '#1a1a2e' : '#e2e2e2',
+          font: { size: 9, weight: '600', family: '-apple-system, BlinkMacSystemFont, sans-serif' },
           align: 'top',
           offset: 5,
           clip: false,
+          textShadowColor: (ctx) => document.body.classList.contains('light') ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+          textShadowBlur: 3,
           formatter: val => {
             return val._raw.name
               .replace(' Mac Studio', '').replace('Mac Studio ', '')
@@ -481,9 +483,41 @@ document.querySelectorAll('thead th[data-col]').forEach(th => {
   });
 });
 
+// ─── THEME ───────────────────────────────────────────────────────────────────
+function applyTheme(light) {
+  document.body.classList.toggle('light', light);
+  document.getElementById('themeBtn').textContent = light ? '🌙 Dark' : '☀️ Light';
+  localStorage.setItem('vramora-theme', light ? 'light' : 'dark');
+  if (chart) {
+    const lc     = light ? '#e8e4de' : '#16161e';
+    const tc     = light ? '#b0a090' : '#3a3a5a';
+    const titleC = light ? '#9e8e7e' : '#444';
+    const bc     = light ? '#e8e4de' : '#222';
+    chart.options.scales.x.grid.color   = lc;
+    chart.options.scales.y.grid.color   = lc;
+    chart.options.scales.x.ticks.color  = tc;
+    chart.options.scales.y.ticks.color  = tc;
+    chart.options.scales.x.title.color  = titleC;
+    chart.options.scales.y.title.color  = titleC;
+    chart.options.scales.x.border.color = bc;
+    chart.options.scales.y.border.color = bc;
+    chart.update();
+  }
+}
+
+function toggleTheme() {
+  applyTheme(!document.body.classList.contains('light'));
+}
+
+function applyStoredTheme() {
+  const stored = localStorage.getItem('vramora-theme');
+  if (stored === 'light') applyTheme(true);
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 Chart.register(ChartDataLabels);
 populateModelSelect();
 decodeState();
 initChart();
 updateStats();
+applyStoredTheme();
