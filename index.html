@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VRAMora — Local LLM Hardware Comparison</title>
+<meta name="description" content="Compare local LLM inference hardware by cost, memory, speed, and power draw. RTX 3090, 4090, 5090, Mac Studio, DGX Spark, Mac Mini clusters and more.">
+<meta property="og:title" content="VRAMora — Local LLM Hardware Comparison">
+<meta property="og:description" content="Interactive bubble chart comparing cost, VRAM, tokens/sec, and power draw across 20+ local inference setups.">
+<meta property="og:url" content="https://vramora.ai">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="VRAMora">
+<meta name="twitter:description" content="Find the best hardware for running LLMs locally. Compare cost, speed, memory, and power draw.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0f13;color:#e2e2e2;min-height:100vh}
+header{padding:14px 32px 12px;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#7c6af7,#5eead4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.logo-text{font-size:1.25rem;font-weight:800;color:#fff;letter-spacing:-.03em}
+.logo-text span{color:#7c6af7}
+.tagline{font-size:.73rem;color:#444;border-left:1px solid #222;padding-left:16px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.gh-link{font-size:.72rem;color:#555;text-decoration:none;padding:4px 10px;border:1px solid #222;border-radius:6px;transition:all .15s}
+.gh-link:hover{color:#aaa;border-color:#444}
+.layout{display:flex;height:calc(100vh - 68px)}
+
+/* ── SIDEBAR ── */
+.sidebar{width:222px;min-width:180px;background:#111118;border-right:1px solid #1e1e2e;padding:14px 12px;overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+.sb h3{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:#3a3a5a;margin-bottom:8px}
+.fl label{display:flex;align-items:center;gap:7px;font-size:.77rem;color:#888;cursor:pointer;padding:2px 0;user-select:none}
+.fl label:hover{color:#ccc}
+.fl input[type=checkbox]{width:13px;height:13px;accent-color:#7c6af7;cursor:pointer}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.pw-bar{height:11px;border-radius:5px;background:linear-gradient(to right,#22c55e,#eab308,#ef4444);margin:5px 0 3px}
+.pw-lbl{display:flex;justify-content:space-between;font-size:.63rem;color:#3a3a5a}
+.bub-row{display:flex;align-items:center;gap:8px;font-size:.72rem;color:#555;margin-bottom:4px}
+.bub-c{border-radius:50%;background:#333;flex-shrink:0}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.toolbar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid #1a1a28;flex-wrap:wrap}
+.toolbar label{font-size:.73rem;color:#555;display:flex;align-items:center;gap:6px}
+.toolbar select{background:#18181f;border:1px solid #2a2a3a;color:#bbb;padding:4px 10px;border-radius:6px;font-size:.74rem;cursor:pointer}
+.toolbar select:hover{border-color:#7c6af7}
+.vt{margin-left:auto;display:flex;background:#18181f;border:1px solid #2a2a3a;border-radius:7px;overflow:hidden}
+.vb{padding:5px 14px;font-size:.74rem;cursor:pointer;color:#555;border:none;background:transparent;transition:all .15s}
+.vb.active{background:#7c6af7;color:#fff}
+
+/* ── CHART VIEW ── */
+.chart-area{flex:1;padding:14px 20px;display:flex;flex-direction:column;min-height:0}
+.chart-wrap{flex:1;position:relative;min-height:0}
+
+/* ── TABLE VIEW ── */
+.table-area{flex:1;overflow-y:auto;padding:0 20px 12px}
+table{width:100%;border-collapse:collapse;font-size:.77rem}
+thead th{position:sticky;top:0;background:#111118;padding:8px 10px;text-align:left;font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:#3a3a5a;border-bottom:1px solid #1e1e2e;cursor:pointer;user-select:none;white-space:nowrap}
+thead th:hover{color:#666}
+thead th.sorted{color:#7c6af7}
+.sa{opacity:.4;margin-left:3px}
+.sorted .sa{opacity:1}
+tbody td{padding:8px 10px;border-bottom:1px solid #14141e;color:#999;white-space:nowrap}
+tbody tr:hover td{background:#13131c}
+.nm{color:#ddd;font-weight:500}
+.badge{display:inline-block;padding:1px 7px;border-radius:20px;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.pw-cell{display:flex;align-items:center;gap:7px}
+.pw-bg{width:70px;height:5px;background:#1e1e2e;border-radius:3px;overflow:hidden}
+.pw-fill{height:100%;border-radius:3px}
+.pw-val{font-size:.72rem;min-width:36px}
+
+/* ── TOOLTIP ── */
+.tt{position:absolute;background:#16161f;border:1px solid #2a2a3a;border-radius:10px;padding:12px 14px;pointer-events:none;font-size:.75rem;min-width:225px;box-shadow:0 10px 40px rgba(0,0,0,.75);z-index:100;display:none}
+.tt-name{font-weight:700;font-size:.87rem;color:#fff;margin-bottom:8px}
+.tt-r{display:flex;justify-content:space-between;gap:14px;margin:2px 0;color:#666}
+.tt-r span:last-child{color:#ccc;font-weight:500}
+.tt-pw{margin:5px 0 3px}
+.tt-pw-bg{height:5px;background:#2a2a3a;border-radius:3px;overflow:hidden;margin-top:4px}
+.tt-pw-fill{height:100%;border-radius:3px}
+.tt-tag{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.tt-note{margin-top:8px;font-size:.67rem;color:#444;font-style:italic;line-height:1.4}
+
+/* ── STAT CARDS ── */
+.stat-row{display:flex;gap:8px;padding:10px 20px 12px;flex-shrink:0}
+.sc{flex:1;background:#111118;border:1px solid #1a1a28;border-radius:8px;padding:9px 12px;min-width:0}
+.sc .lb{font-size:.6rem;color:#2e2e4a;text-transform:uppercase;letter-spacing:.09em}
+.sc .vl{font-size:.85rem;font-weight:700;color:#ddd;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc .sb2{font-size:.62rem;color:#3a3a5a;margin-top:1px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/">
+    <div class="logo-mark">⚡</div>
+    <div class="logo-text">VRAM<span>ora</span></div>
+  </a>
+  <p class="tagline">Local LLM inference hardware, visualized &nbsp;·&nbsp; bubble = speed &nbsp;·&nbsp; <span style="color:#22c55e">■</span> green = efficient &nbsp;→&nbsp; <span style="color:#ef4444">■</span> red = power hungry &nbsp;·&nbsp; hover for full specs</p>
+  <div class="header-right">
+    <a class="gh-link" href="https://github.com/xfactor4774/vramora" target="_blank">★ GitHub</a>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb fl">
+      <h3>Hardware Type</h3>
+      <label><input type="checkbox" class="cf" data-cat="nvidia" checked><span class="dot" style="background:#5eead4"></span>NVIDIA GPU rig</label>
+      <label><input type="checkbox" class="cf" data-cat="apple" checked><span class="dot" style="background:#a78bfa"></span>Apple Silicon</label>
+      <label><input type="checkbox" class="cf" data-cat="system" checked><span class="dot" style="background:#fb923c"></span>Packaged System</label>
+      <label><input type="checkbox" class="cf" data-cat="cluster" checked><span class="dot" style="background:#facc15"></span>Mac Mini Cluster</label>
+    </div>
+    <div class="sb fl">
+      <h3>VRAM / Memory</h3>
+      <label><input type="checkbox" class="vf" data-vram="12" checked>≤ 12 GB</label>
+      <label><input type="checkbox" class="vf" data-vram="24" checked>13–24 GB</label>
+      <label><input type="checkbox" class="vf" data-vram="48" checked>25–48 GB</label>
+      <label><input type="checkbox" class="vf" data-vram="96" checked>49–96 GB</label>
+      <label><input type="checkbox" class="vf" data-vram="192" checked>97–192 GB</label>
+      <label><input type="checkbox" class="vf" data-vram="512" checked>193+ GB</label>
+    </div>
+    <div class="sb">
+      <h3>Color = Power Draw</h3>
+      <div class="pw-bar"></div>
+      <div class="pw-lbl"><span>Low (~40W)</span><span>High (1000W+)</span></div>
+      <div style="font-size:.64rem;color:#2e2e4a;margin-top:5px">Estimated full-system TDP under LLM load</div>
+    </div>
+    <div class="sb">
+      <h3>Bubble = t/s at 7B Q4</h3>
+      <div class="bub-row"><div class="bub-c" style="width:12px;height:12px"></div><span>&lt; 70 t/s</span></div>
+      <div class="bub-row"><div class="bub-c" style="width:18px;height:18px"></div><span>70–100 t/s</span></div>
+      <div class="bub-row"><div class="bub-c" style="width:24px;height:24px"></div><span>100–125 t/s</span></div>
+      <div class="bub-row"><div class="bub-c" style="width:31px;height:31px"></div><span>125+ t/s</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="toolbar">
+      <label>Y-Axis:
+        <select id="yMode">
+          <option value="max_params">Max Model Size (B params, Q4)</option>
+          <option value="vram">VRAM / Unified Memory (GB)</option>
+          <option value="tps">Token Speed at 7B Q4 (t/s)</option>
+          <option value="tpw">Efficiency: t/s per Watt</option>
+        </select>
+      </label>
+      <label>Highlight:
+        <select id="hlMode">
+          <option value="none">None</option>
+          <option value="best_value">Best Value (t/s per $1k)</option>
+          <option value="fastest">Fastest (7B t/s)</option>
+          <option value="efficient">Most Efficient (t/s/W)</option>
+          <option value="most_vram">Most Memory</option>
+        </select>
+      </label>
+      <div class="vt">
+        <button class="vb active" id="btn-chart" onclick="setView('chart')">📈 Chart</button>
+        <button class="vb" id="btn-table" onclick="setView('table')">📋 Table</button>
+      </div>
+    </div>
+
+    <!-- chart -->
+    <div id="view-chart" class="chart-area">
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="tt" id="tt"></div>
+      </div>
+    </div>
+
+    <!-- table -->
+    <div id="view-table" class="table-area hidden">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="name">Hardware <span class="sa">↕</span></th>
+            <th data-col="cat">Type <span class="sa">↕</span></th>
+            <th data-col="cost" class="sorted">Cost <span class="sa">↑</span></th>
+            <th data-col="vram">Memory <span class="sa">↕</span></th>
+            <th data-col="tps7">7B t/s <span class="sa">↕</span></th>
+            <th data-col="tps70">70B t/s <span class="sa">↕</span></th>
+            <th data-col="maxB">Max Model <span class="sa">↕</span></th>
+            <th data-col="tdp">Power <span class="sa">↕</span></th>
+            <th data-col="tpw">t/s/W <span class="sa">↕</span></th>
+            <th data-col="value">t/s per $1k <span class="sa">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- stat cards -->
+    <div class="stat-row">
+      <div class="sc"><div class="lb">Best Value</div><div class="vl" id="s-val">—</div><div class="sb2" id="s-val2"></div></div>
+      <div class="sc"><div class="lb">Fastest 7B</div><div class="vl" id="s-spd">—</div><div class="sb2" id="s-spd2"></div></div>
+      <div class="sc"><div class="lb">Most Efficient</div><div class="vl" id="s-eff">—</div><div class="sb2" id="s-eff2"></div></div>
+      <div class="sc"><div class="lb">Most Memory</div><div class="vl" id="s-mem">—</div><div class="sb2" id="s-mem2"></div></div>
+      <div class="sc"><div class="lb">Biggest Model (Q4)</div><div class="vl" id="s-mdl">—</div><div class="sb2" id="s-mdl2"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
