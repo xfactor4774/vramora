@@ -483,6 +483,27 @@ document.querySelectorAll('thead th[data-col]').forEach(th => {
   });
 });
 
+// ─── MODALS ──────────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById('modal-' + id).classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById('modal-' + id).classList.add('hidden');
+  document.body.style.overflow = '';
+}
+function closeModalBackdrop(e, id) {
+  if (e.target === e.currentTarget) closeModal(id);
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['help','changelog'].forEach(id => {
+      const el = document.getElementById('modal-' + id);
+      if (el && !el.classList.contains('hidden')) closeModal(id);
+    });
+  }
+});
+
 // ─── MOBILE SIDEBAR ──────────────────────────────────────────────────────────
 function toggleSidebar() {
   const sb = document.querySelector('.sidebar');

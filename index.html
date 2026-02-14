@@ -156,6 +156,64 @@ tbody tr:hover td{background:#13131c}
 .sc .sb2{font-size:.62rem;color:#3a3a5a;margin-top:1px}
 .hidden{display:none!important}
 
+/* ── MODALS ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-backdrop.hidden{display:none!important}
+.modal{background:#16161f;border:1px solid #2a2a3a;border-radius:14px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.8)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid #1e1e2e;flex-shrink:0}
+.modal-head h2{font-size:1rem;font-weight:700;color:#e2e2e2;letter-spacing:-.02em}
+.modal-close{background:none;border:none;color:#444;font-size:1.2rem;cursor:pointer;padding:2px 6px;border-radius:5px;line-height:1;transition:color .15s}
+.modal-close:hover{color:#aaa}
+.modal-body{padding:18px 20px;overflow-y:auto;flex:1}
+
+/* Help modal */
+.help-section{margin-bottom:18px}
+.help-section:last-child{margin-bottom:0}
+.help-section h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#5a5a8a;margin-bottom:10px}
+.help-item{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+.help-icon{font-size:1.1rem;flex-shrink:0;line-height:1.3}
+.help-text{font-size:.78rem;color:#999;line-height:1.5}
+.help-text strong{color:#ccc;font-weight:600}
+
+/* Changelog modal */
+.cl-entry{border-left:2px solid #2a2a3a;padding-left:14px;margin-bottom:20px}
+.cl-entry:last-child{margin-bottom:0}
+.cl-date{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:#5a5a8a;margin-bottom:4px}
+.cl-title{font-size:.85rem;font-weight:700;color:#ddd;margin-bottom:6px}
+.cl-items{list-style:none;padding:0}
+.cl-items li{font-size:.76rem;color:#888;padding:2px 0;display:flex;gap:8px}
+.cl-items li::before{content:'→';color:#3a3a6a;flex-shrink:0}
+.cl-tag{display:inline-block;padding:0px 6px;border-radius:10px;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;vertical-align:middle;margin-left:5px}
+.cl-tag.feat{background:#7c6af722;color:#9d8ef7}
+.cl-tag.data{background:#5eead422;color:#5eead4}
+.cl-tag.ux{background:#fb923c22;color:#fb923c}
+
+/* Light mode modals */
+body.light .modal{background:#faf9f7;border-color:#e8e4de}
+body.light .modal-head{border-bottom-color:#e8e4de}
+body.light .modal-head h2{color:#1a1a2e}
+body.light .modal-close{color:#c9b99a}
+body.light .modal-close:hover{color:#5c4a3a}
+body.light .help-section h3{color:#c9b99a}
+body.light .help-text{color:#7a6a5a}
+body.light .help-text strong{color:#3d2b1a}
+body.light .cl-entry{border-left-color:#e8e4de}
+body.light .cl-date{color:#c9b99a}
+body.light .cl-title{color:#3d2b1a}
+body.light .cl-items li{color:#9e8e7e}
+body.light .cl-items li::before{color:#c9b99a}
+
+/* header icon buttons */
+.icon-btn{background:none;border:1px solid #222;color:#555;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.75rem;transition:all .15s;white-space:nowrap;line-height:1.3}
+.icon-btn:hover{color:#aaa;border-color:#444}
+body.light .icon-btn{color:#9e8e7e;border-color:#e8e4de}
+body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
+
+@media (max-width:768px){
+  .modal{max-width:100%;max-height:92vh;border-radius:10px}
+  .modal-body{padding:14px 16px}
+}
+
 /* ── MOBILE ── */
 @media (max-width: 768px) {
   /* Header */
@@ -233,10 +291,124 @@ tbody tr:hover td{background:#13131c}
   <p class="tagline">Local LLM inference hardware, visualized &nbsp;·&nbsp; bubble = speed &nbsp;·&nbsp; <span style="color:#22c55e">■</span> green = efficient &nbsp;→&nbsp; <span style="color:#ef4444">■</span> red = power hungry &nbsp;·&nbsp; hover for full specs</p>
   <div class="header-right">
     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">⚙️ Filters</button>
+    <button class="icon-btn" onclick="openModal('help')" title="How to use VRAMora">? Help</button>
+    <button class="icon-btn" onclick="openModal('changelog')" title="What's new">📋 Log</button>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
     <a class="gh-link" href="https://github.com/xfactor4774/vramora" target="_blank">★ GitHub</a>
   </div>
 </header>
+
+<!-- ── HELP MODAL ── -->
+<div class="modal-backdrop hidden" id="modal-help" onclick="closeModalBackdrop(event,'help')">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>How to use VRAMora</h2>
+      <button class="modal-close" onclick="closeModal('help')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="help-section">
+        <h3>The Chart</h3>
+        <div class="help-item"><div class="help-icon">📍</div><div class="help-text"><strong>Position:</strong> X-axis = system cost. Y-axis = max model you can run at Q4 (switchable via the Y-Axis dropdown above).</div></div>
+        <div class="help-item"><div class="help-icon">⭕</div><div class="help-text"><strong>Bubble size:</strong> Bigger = faster token generation at 7B Q4. A huge bubble means snappy responses.</div></div>
+        <div class="help-item"><div class="help-icon">🟢</div><div class="help-text"><strong>Bubble color:</strong> Green = power-efficient. Yellow = moderate. Red = power-hungry. Based on full-system TDP under LLM load.</div></div>
+        <div class="help-item"><div class="help-icon">🖱️</div><div class="help-text"><strong>Hover a bubble</strong> to see full specs: cost, memory, speed, power draw, max model size, and notes.</div></div>
+      </div>
+      <div class="help-section">
+        <h3>Filters &amp; Controls</h3>
+        <div class="help-item"><div class="help-icon">☑️</div><div class="help-text"><strong>Sidebar filters</strong> let you narrow by hardware type (NVIDIA / Apple / System / Cluster) and memory tier.</div></div>
+        <div class="help-item"><div class="help-icon">📊</div><div class="help-text"><strong>Y-Axis dropdown:</strong> Switch between Max Model Size, VRAM, Token Speed, or Efficiency (t/s per Watt).</div></div>
+        <div class="help-item"><div class="help-icon">✨</div><div class="help-text"><strong>Highlight dropdown:</strong> Visually singles out the best value, fastest, most efficient, or most memory option from the current filtered set.</div></div>
+      </div>
+      <div class="help-section">
+        <h3>What Can I Run?</h3>
+        <div class="help-item"><div class="help-icon">🔍</div><div class="help-text"><strong>Pick a model</strong> from the dropdown and the chart dims any hardware that doesn't have enough memory to run it. Green-bright = you're good. Faded = OOM.</div></div>
+      </div>
+      <div class="help-section">
+        <h3>Table View</h3>
+        <div class="help-item"><div class="help-icon">📋</div><div class="help-text"><strong>Switch to Table</strong> using the toggle top-right. All columns are <strong>sortable</strong> — click a header to sort ascending, click again for descending.</div></div>
+      </div>
+      <div class="help-section">
+        <h3>Sharing</h3>
+        <div class="help-item"><div class="help-icon">🔗</div><div class="help-text"><strong>Share view</strong> encodes your current filters, Y-axis, and selected model into the URL. Copy and send it — recipients land on exactly your view.</div></div>
+      </div>
+      <div class="help-section">
+        <h3>Data &amp; Accuracy</h3>
+        <div class="help-item"><div class="help-icon">📝</div><div class="help-text">All benchmarks are <strong>approximate</strong> — sourced from hardware-corner.net, llama.cpp discussions, and community testing. Real-world numbers vary by model, quantization, and system config. Token speeds are for llama.cpp / MLX at 7B Q4_K_M unless noted.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHANGELOG MODAL ── -->
+<div class="modal-backdrop hidden" id="modal-changelog" onclick="closeModalBackdrop(event,'changelog')">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>📋 Development Log</h2>
+      <button class="modal-close" onclick="closeModal('changelog')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 14, 2026</div>
+        <div class="cl-title">Mobile responsive layout <span class="cl-tag ux">UX</span></div>
+        <ul class="cl-items">
+          <li>Collapsible ⚙️ Filters sidebar on mobile</li>
+          <li>Chart fixed height (340px) instead of collapsing</li>
+          <li>Toolbar wraps gracefully; full-width controls at 480px</li>
+          <li>Table view gets horizontal scroll on small screens</li>
+          <li>Stat cards reflow to 2-column grid on mobile</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 14, 2026</div>
+        <div class="cl-title">Shareable URLs + "What can I run?" <span class="cl-tag feat">Feature</span></div>
+        <ul class="cl-items">
+          <li>🔍 Model filter — pick any of 22 popular LLMs; hardware that can't run it is dimmed to 12% opacity</li>
+          <li>🔗 Share view button — encodes all active filters + Y-axis + selected model into URL hash</li>
+          <li>✓ fits / ✗ OOM badges appear in table view when a model is selected</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 14, 2026</div>
+        <div class="cl-title">New hardware added <span class="cl-tag data">Data</span></div>
+        <ul class="cl-items">
+          <li>RTX 5090 — Blackwell GB202, 32GB GDDR7, 1792 GB/s</li>
+          <li>Dell Pro Max (GB10) — same chip as DGX Spark, $4,600</li>
+          <li>4× Mac Mini M4 Pro cluster — 96GB combined via Thunderbolt 5</li>
+          <li>8× Mac Mini M4 Pro cluster — 192GB combined, runs DeepSeek 671B</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 14, 2026</div>
+        <div class="cl-title">Light / dark theme toggle <span class="cl-tag ux">UX</span></div>
+        <ul class="cl-items">
+          <li>Full light mode with warm parchment palette</li>
+          <li>Theme preference saved to localStorage</li>
+          <li>Chart axes, grid lines, and labels adapt to theme</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 14, 2026</div>
+        <div class="cl-title">Initial launch <span class="cl-tag feat">Feature</span></div>
+        <ul class="cl-items">
+          <li>Bubble chart: 21 hardware configs across NVIDIA, Apple Silicon, packaged systems, and clusters</li>
+          <li>Bubble size = tokens/sec at 7B Q4 · Color = power draw (green → red)</li>
+          <li>Y-axis switchable: max model size / VRAM / t/s / t/s per Watt</li>
+          <li>Highlight dropdown: best value, fastest, most efficient, most memory</li>
+          <li>Sortable table view with power bars and category badges</li>
+          <li>5 stat cards: best value, fastest 7B, most efficient, most memory, biggest model</li>
+          <li>Sidebar filters: hardware type + VRAM tier</li>
+          <li>Hover tooltips with full specs + notes</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <div class="layout">
   <!-- SIDEBAR -->
