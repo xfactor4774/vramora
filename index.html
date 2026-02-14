@@ -50,6 +50,16 @@ header{padding:14px 32px 12px;border-bottom:1px solid #1e1e2e;display:flex;align
 .vb{padding:5px 14px;font-size:.74rem;cursor:pointer;color:#555;border:none;background:transparent;transition:all .15s}
 .vb.active{background:#7c6af7;color:#fff}
 
+/* model banner */
+.model-banner{display:flex;align-items:center;gap:12px;padding:7px 20px;background:#0d1f1a;border-bottom:1px solid #1a3328;font-size:.75rem;color:#7ab8a0}
+.model-banner button{margin-left:auto;background:none;border:1px solid #1a3328;color:#555;padding:2px 10px;border-radius:5px;cursor:pointer;font-size:.7rem}
+.model-banner button:hover{color:#aaa;border-color:#444}
+/* share btn */
+.share-btn{padding:5px 13px;font-size:.73rem;cursor:pointer;color:#7c6af7;border:1px solid #2a2a4a;border-radius:6px;background:transparent;transition:all .15s;white-space:nowrap}
+.share-btn:hover{background:#7c6af7;color:#fff}
+/* model select */
+.model-sep{width:1px;height:18px;background:#222;margin:0 4px}
+
 /* ── CHART VIEW ── */
 .chart-area{flex:1;padding:14px 20px;display:flex;flex-direction:column;min-height:0}
 .chart-wrap{flex:1;position:relative;min-height:0}
@@ -158,10 +168,23 @@ tbody tr:hover td{background:#13131c}
           <option value="most_vram">Most Memory</option>
         </select>
       </label>
+      <div class="model-sep"></div>
+      <label>🔍 What can I run?
+        <select id="modelSelect">
+          <option value="">— Pick a model —</option>
+        </select>
+      </label>
+      <button class="share-btn" id="shareBtn" onclick="copyShareLink()">🔗 Share view</button>
       <div class="vt">
         <button class="vb active" id="btn-chart" onclick="setView('chart')">📈 Chart</button>
         <button class="vb" id="btn-table" onclick="setView('table')">📋 Table</button>
       </div>
+    </div>
+
+    <!-- model banner -->
+    <div class="model-banner hidden" id="modelBanner">
+      <span id="bannerText"></span>
+      <button onclick="clearModel()">✕ Clear</button>
     </div>
 
     <!-- chart -->

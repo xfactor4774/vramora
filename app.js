@@ -110,21 +110,6 @@ function pwHex(tdp) {
 // ─── CHART ───────────────────────────────────────────────────────────────────
 let chart;
 
-function buildDatasets() {
-  const groups = {};
-  visible().forEach(d => {
-    if (!groups[d.cat]) groups[d.cat] = [];
-    groups[d.cat].push(d);
-  });
-  return Object.entries(groups).map(([cat, items]) => ({
-    label: CAT_LBL[cat],
-    data: items.map(d => ({ x: d.cost, y: getY(d), r: bubbleR(d.tps7), _raw: d })),
-    backgroundColor: items.map(d => pwColor(d.tdp, isHighlighted(d) ? 0.92 : 0.70)),
-    borderColor:     items.map(d => isHighlighted(d) ? '#ffffff' : pwHex(d.tdp)),
-    borderWidth:     items.map(d => isHighlighted(d) ? 2.5 : 1),
-  }));
-}
-
 function yAxisLabel() {
   const m = { vram:'VRAM / Unified Memory (GB)', tps:'Tokens/sec at 7B Q4', tpw:'t/s per Watt (7B Q4)', max_params:'Max Model Size (B params, Q4)' };
   return m[yMode] || m.max_params;
@@ -228,7 +213,152 @@ function refreshChart() {
   chart.update();
 }
 
-// ─── TABLE ───────────────────────────────────────────────────────────────────
+// ─── MODELS ("What Can I Run?") ──────────────────────────────────────────────
+// Q4 VRAM requirement in GB for each model
+const MODELS = [
+  { name:'Llama 3.2 1B',       vram: 1  },
+  { name:'Llama 3.2 3B',       vram: 2  },
+  { name:'Llama 3.1 8B',       vram: 5  },
+  { name:'Mistral 7B',         vram: 5  },
+  { name:'Gemma 3 9B',         vram: 6  },
+  { name:'Llama 3.1 13B',      vram: 8  },
+  { name:'Qwen 2.5 14B',       vram: 9  },
+  { name:'Gemma 3 27B',        vram: 17 },
+  { name:'Qwen 2.5 32B',       vram: 20 },
+  { name:'Llama 3.3 70B',      vram: 43 },
+  { name:'Qwen 2.5 72B',       vram: 45 },
+  { name:'DeepSeek R1 8B',     vram: 5  },
+  { name:'DeepSeek R1 14B',    vram: 9  },
+  { name:'DeepSeek R1 32B',    vram: 20 },
+  { name:'DeepSeek R1 70B',    vram: 43 },
+  { name:'DeepSeek V3 671B',   vram: 380},
+  { name:'Llama 3.1 405B',     vram: 230},
+  { name:'Qwen3 30B-A3B (MoE)',vram: 17 },
+  { name:'Mixtral 8×7B',       vram: 28 },
+  { name:'Phi-4 14B',          vram: 9  },
+  { name:'Command R 35B',      vram: 22 },
+  { name:'Gemma 3 12B',        vram: 8  },
+];
+
+let selectedModel = null; // null = no filter
+
+function populateModelSelect() {
+  const sel = document.getElementById('modelSelect');
+  MODELS.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.name;
+    opt.textContent = m.name + ` (${m.vram}GB)`;
+    sel.appendChild(opt);
+  });
+}
+
+function getSelectedModelVram() {
+  if (!selectedModel) return null;
+  return (MODELS.find(m => m.name === selectedModel) || {}).vram || null;
+}
+
+// override alpha based on model fit
+function modelAlpha(d) {
+  const req = getSelectedModelVram();
+  if (req === null) return null; // no model selected, use default
+  return d.vram >= req ? 0.92 : 0.12; // can run = bright, can't = dimmed
+}
+
+function canRunModel(d) {
+  const req = getSelectedModelVram();
+  if (req === null) return true;
+  return d.vram >= req;
+}
+
+function clearModel() {
+  selectedModel = null;
+  document.getElementById('modelSelect').value = '';
+  document.getElementById('modelBanner').classList.add('hidden');
+  refresh();
+}
+
+// ─── URL STATE (shareable links) ─────────────────────────────────────────────
+function encodeState() {
+  const params = new URLSearchParams();
+  params.set('y', yMode);
+  params.set('hl', hlMode);
+  params.set('view', currentView);
+  params.set('cats', [...activeCats].join(','));
+  params.set('vram', [...activeVram].join(','));
+  if (selectedModel) params.set('model', selectedModel);
+  return '#' + params.toString();
+}
+
+function decodeState() {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  const params = new URLSearchParams(hash);
+  if (params.get('y'))    { yMode = params.get('y'); document.getElementById('yMode').value = yMode; }
+  if (params.get('hl'))   { hlMode = params.get('hl'); document.getElementById('hlMode').value = hlMode; }
+  if (params.get('cats')) {
+    activeCats = new Set(params.get('cats').split(','));
+    document.querySelectorAll('.cf').forEach(cb => { cb.checked = activeCats.has(cb.dataset.cat); });
+  }
+  if (params.get('vram')) {
+    activeVram = new Set(params.get('vram').split(','));
+    document.querySelectorAll('.vf').forEach(cb => { cb.checked = activeVram.has(cb.dataset.vram); });
+  }
+  if (params.get('model')) {
+    selectedModel = params.get('model');
+    document.getElementById('modelSelect').value = selectedModel;
+    showModelBanner();
+  }
+  if (params.get('view')) setView(params.get('view'));
+}
+
+function pushState() {
+  history.replaceState(null, '', encodeState());
+}
+
+function copyShareLink() {
+  pushState();
+  navigator.clipboard.writeText(location.href).then(() => {
+    const btn = document.getElementById('shareBtn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+
+function showModelBanner() {
+  const req = getSelectedModelVram();
+  if (!req) return;
+  const can = DATA.filter(d => d.vram >= req).length;
+  const banner = document.getElementById('modelBanner');
+  banner.classList.remove('hidden');
+  document.getElementById('bannerText').innerHTML =
+    `<strong>${selectedModel}</strong> needs ~${req}GB &nbsp;·&nbsp; <span style="color:#5eead4">${can} setups</span> can run it &nbsp;·&nbsp; others are dimmed`;
+}
+
+// ─── CHART (updated to support model dimming) ─────────────────────────────────
+function buildDatasets() {
+  const groups = {};
+  visible().forEach(d => {
+    if (!groups[d.cat]) groups[d.cat] = [];
+    groups[d.cat].push(d);
+  });
+  return Object.entries(groups).map(([cat, items]) => ({
+    label: CAT_LBL[cat],
+    data: items.map(d => ({ x: d.cost, y: getY(d), r: bubbleR(d.tps7), _raw: d })),
+    backgroundColor: items.map(d => {
+      const ma = modelAlpha(d);
+      const base = ma !== null ? ma : (isHighlighted(d) ? 0.92 : 0.70);
+      return pwColor(d.tdp, base);
+    }),
+    borderColor: items.map(d => {
+      if (!canRunModel(d)) return 'rgba(255,255,255,0.08)';
+      return isHighlighted(d) ? '#ffffff' : pwHex(d.tdp);
+    }),
+    borderWidth: items.map(d => isHighlighted(d) ? 2.5 : 1),
+  }));
+}
+
+// ─── TABLE (updated to show model compat) ─────────────────────────────────────
 function renderTable() {
   const rows = [...visible()];
   rows.sort((a, b) => {
@@ -239,14 +369,18 @@ function renderTable() {
     return sortAsc ? av - bv : bv - av;
   });
 
+  const req = getSelectedModelVram();
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = rows.map(d => {
     const col   = CAT_COL[d.cat];
     const pct   = Math.round(Math.min(100, (d.tdp - 40) / 1160 * 100));
     const pwc   = pwHex(d.tdp);
+    const fits  = req ? d.vram >= req : true;
+    const rowStyle = fits ? '' : 'opacity:0.3';
+    const fitBadge = req ? `<span style="margin-left:6px;font-size:.58rem;color:${fits?'#5eead4':'#ef4444'}">${fits?'✓ fits':'✗ OOM'}</span>` : '';
     return `
-      <tr>
-        <td class="nm">${d.name}</td>
+      <tr style="${rowStyle}">
+        <td class="nm">${d.name}${fitBadge}</td>
         <td><span class="badge" style="background:${col}22;color:${col}">${CAT_LBL[d.cat]}</span></td>
         <td>$${d.cost.toLocaleString()}</td>
         <td>${d.vram} GB</td>
@@ -264,7 +398,6 @@ function renderTable() {
       </tr>`;
   }).join('');
 
-  // update sort arrow indicators
   document.querySelectorAll('thead th').forEach(th => {
     th.classList.remove('sorted');
     th.querySelector('.sa').textContent = '↕';
@@ -313,6 +446,7 @@ function refresh() {
   refreshChart();
   if (currentView === 'table') renderTable();
   updateStats();
+  pushState();
 }
 
 // ─── EVENTS ──────────────────────────────────────────────────────────────────
@@ -335,6 +469,12 @@ document.querySelectorAll('.vf').forEach(cb => {
 document.getElementById('yMode').addEventListener('change', e => { yMode = e.target.value; refresh(); });
 document.getElementById('hlMode').addEventListener('change', e => { hlMode = e.target.value; refresh(); });
 
+document.getElementById('modelSelect').addEventListener('change', e => {
+  selectedModel = e.target.value || null;
+  if (selectedModel) showModelBanner(); else document.getElementById('modelBanner').classList.add('hidden');
+  refresh();
+});
+
 document.querySelectorAll('thead th[data-col]').forEach(th => {
   th.addEventListener('click', () => {
     const col = th.dataset.col;
@@ -346,5 +486,7 @@ document.querySelectorAll('thead th[data-col]').forEach(th => {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 Chart.register(ChartDataLabels);
+populateModelSelect();
+decodeState();
 initChart();
 updateStats();
