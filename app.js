@@ -483,6 +483,14 @@ document.querySelectorAll('thead th[data-col]').forEach(th => {
   });
 });
 
+// ─── MOBILE SIDEBAR ──────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const btn = document.getElementById('sidebarToggle');
+  const open = sb.classList.toggle('open');
+  btn.textContent = open ? '✕ Close' : '⚙️ Filters';
+}
+
 // ─── THEME ───────────────────────────────────────────────────────────────────
 function applyTheme(light) {
   document.body.classList.toggle('light', light);
