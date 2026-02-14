@@ -3,16 +3,16 @@ const CAT_COL = {nvidia:'#5eead4', apple:'#a78bfa', system:'#fb923c', cluster:'#
 const CAT_LBL = {nvidia:'NVIDIA GPU Rig', apple:'Apple Silicon', system:'Packaged System', cluster:'Mac Mini Cluster'};
 
 const DATA = [
-  {id:'rtx3060',  name:'RTX 3060',               cat:'nvidia',cost:1300,vram:12, bw:360, tps7:60, tps70:null,maxB:7,  tdp:220,notes:'12GB VRAM limits to 7B Q4. Budget LLM entry point.'},
-  {id:'rtx3080ti',name:'RTX 3080 Ti',             cat:'nvidia',cost:1600,vram:12, bw:912, tps7:108,tps70:null,maxB:7,  tdp:320,notes:'Fast bandwidth, 12GB cap. Best 7B speed but nowhere to grow.'},
-  {id:'rtx4080',  name:'RTX 4080',                cat:'nvidia',cost:2100,vram:16, bw:716, tps7:113,tps70:null,maxB:13, tdp:290,notes:'16GB handles 13B. Ada Lovelace efficiency improvements.'},
-  {id:'rtx4000a', name:'RTX 4000 Ada (20GB)',     cat:'nvidia',cost:2200,vram:20, bw:360, tps7:65, tps70:null,maxB:13, tdp:200,notes:'Pro workstation card. 20GB VRAM, low power. Bandwidth limited.'},
-  {id:'rtx3090',  name:'RTX 3090',                cat:'nvidia',cost:1700,vram:24, bw:936, tps7:121,tps70:null,maxB:30, tdp:490,notes:'The sweet spot. Used ~$900 GPU, 24GB VRAM. Runs 30B Q4. Best bang/buck.'},
-  {id:'rtx4090',  name:'RTX 4090',                cat:'nvidia',cost:3500,vram:24, bw:1008,tps7:139,tps70:null,maxB:30, tdp:480,notes:'Fastest single GPU. Still capped at 24GB VRAM, 30B Q4 limit.'},
-  {id:'rtxA6000', name:'RTX A6000 (48GB)',        cat:'nvidia',cost:6500,vram:48, bw:768, tps7:107,tps70:22,  maxB:65, tdp:450,notes:'Pro workstation. 48GB single-card VRAM. Runs 65B Q4.'},
-  {id:'dual3090', name:'2× RTX 3090',             cat:'nvidia',cost:3400,vram:48, bw:936, tps7:121,tps70:20,  maxB:65, tdp:830,notes:'NVLink: 48GB combined. 65B Q4 ~20 t/s. Excellent 70B value.'},
-  {id:'dual4090', name:'2× RTX 4090',             cat:'nvidia',cost:6500,vram:48, bw:1008,tps7:139,tps70:28,  maxB:70, tdp:810,notes:'NVLink, 48GB combined. 70B Q4 ~28 t/s. Speed king.'},
-  {id:'tri3090',  name:'3× RTX 3090',             cat:'nvidia',cost:5200,vram:72, bw:936, tps7:121,tps70:40,  maxB:120,tdp:1170,notes:'72GB VRAM. 120B Q4 capable. 124 t/s tg32 on 120B MXFP4 (llama.cpp).'},
+  {id:'rtx3060',  name:'RTX 3060',               cat:'nvidia',cost:600, vram:12, bw:360, tps7:60, tps70:null,maxB:7,  tdp:220,notes:'12GB VRAM limits to 7B Q4. Budget LLM entry point. Used GPU ~$160–180 + budget platform ~$430.'},
+  {id:'rtx3080ti',name:'RTX 3080 Ti',             cat:'nvidia',cost:950, vram:12, bw:912, tps7:108,tps70:null,maxB:7,  tdp:320,notes:'Fast bandwidth, 12GB cap. Blinding 7B speed but nowhere to grow. Used GPU ~$400–420 + mid platform ~$530.'},
+  {id:'rtx4080',  name:'RTX 4080',                cat:'nvidia',cost:1500,vram:16, bw:716, tps7:113,tps70:null,maxB:13, tdp:290,notes:'16GB handles 13B. Ada Lovelace efficiency improvements. GPU ~$850 new + platform ~$650.'},
+  {id:'rtx4000a', name:'RTX 4000 Ada (20GB)',     cat:'nvidia',cost:1900,vram:20, bw:360, tps7:65, tps70:null,maxB:13, tdp:200,notes:'Pro workstation card. 20GB VRAM, very low power. Bandwidth-limited. Used GPU ~$1,200 + workstation platform ~$700.'},
+  {id:'rtx3090',  name:'RTX 3090',                cat:'nvidia',cost:1200,vram:24, bw:936, tps7:121,tps70:null,maxB:30, tdp:490,notes:'The sweet spot. Used GPU ~$700–750, 24GB VRAM. Runs 30B Q4. Outstanding bang/buck at this price.'},
+  {id:'rtx4090',  name:'RTX 4090',                cat:'nvidia',cost:2500,vram:24, bw:1008,tps7:139,tps70:null,maxB:30, tdp:480,notes:'Fastest single consumer GPU. GPU ~$1,800–2,000 street + platform ~$700. Still 24GB VRAM cap.'},
+  {id:'rtxA6000', name:'RTX A6000 (48GB)',        cat:'nvidia',cost:2900,vram:48, bw:768, tps7:107,tps70:22,  maxB:65, tdp:450,notes:'Pro workstation. 48GB single-card VRAM — no NVLink needed. Used GPU ~$2,200 + workstation ~$700. Runs 65B Q4.'},
+  {id:'dual3090', name:'2× RTX 3090',             cat:'nvidia',cost:2250,vram:48, bw:936, tps7:121,tps70:20,  maxB:65, tdp:830,notes:'NVLink bridge: 48GB combined. Used GPUs ~$1,450 + NVLink ~$100 + platform ~$700. 65B Q4 ~20 t/s. Incredible value.'},
+  {id:'dual4090', name:'2× RTX 4090',             cat:'nvidia',cost:4800,vram:48, bw:1008,tps7:139,tps70:28,  maxB:70, tdp:810,notes:'NVLink, 48GB combined. GPUs ~$3,800 + platform ~$1,000. 70B Q4 ~28 t/s. Speed king.'},
+  {id:'tri3090',  name:'3× RTX 3090',             cat:'nvidia',cost:3100,vram:72, bw:936, tps7:121,tps70:40,  maxB:120,tdp:1170,notes:'72GB VRAM. Used GPUs ~$2,150 + bridges + HEDT platform ~$950. 120B Q4 capable. 124 t/s tg32 on 120B MXFP4 (llama.cpp).'},
   {id:'m3max48',  name:'M3 Max Studio (48GB)',    cat:'apple', cost:3999,vram:48, bw:400, tps7:66, tps70:18,  maxB:65, tdp:50, notes:'Silent, efficient. 48GB unified. $3,999. ~40-50W under LLM load.'},
   {id:'m4max64',  name:'M4 Max Studio (64GB)',    cat:'apple', cost:4999,vram:64, bw:410, tps7:80, tps70:25,  maxB:70, tdp:55, notes:'M4 Max. 64GB unified. Qwen3 30B-A3B >100 t/s via MLX.'},
   {id:'m4max128', name:'M4 Max Studio (128GB)',   cat:'apple', cost:7199,vram:128,bw:546, tps7:80, tps70:40,  maxB:120,tdp:60, notes:'128GB unified memory. Silent powerhouse. Handles 120B Q4.'},
@@ -22,7 +22,7 @@ const DATA = [
   {id:'dgxspark', name:'NVIDIA DGX Spark',        cat:'system',cost:3999,vram:128,bw:275, tps7:60, tps70:39,  maxB:200,tdp:120,notes:'GB10 Grace Blackwell, 128GB LPDDR5. $3,999. NVFP4 unlocks large-model perf. AI lab in a box.'},
 
   // ── NEW ──
-  {id:'rtx5090',  name:'RTX 5090',                cat:'nvidia',cost:4200,vram:32, bw:1792,tps7:186,tps70:null,maxB:30, tdp:575,notes:'Blackwell GB202, 32GB GDDR7, 1792 GB/s bandwidth. $3,999+ street. Blazing fast on 7B–32B. Still 32GB cap — no 70B without multi-GPU.'},
+  {id:'rtx5090',  name:'RTX 5090',                cat:'nvidia',cost:4700,vram:32, bw:1792,tps7:186,tps70:null,maxB:30, tdp:575,notes:'Blackwell GB202, 32GB GDDR7, 1792 GB/s bandwidth. GPU ~$3,999–4,000 street + platform ~$700. Blazing fast on 7B–32B. Still 32GB cap — no 70B without multi-GPU.'},
   {id:'dellgb10', name:'Dell Pro Max (GB10)',      cat:'system',cost:4600,vram:128,bw:275, tps7:60, tps70:39,  maxB:200,tdp:125,notes:'Same GB10 Grace Blackwell chip as DGX Spark, 128GB LPDDR5x. $4,600. Ships with DGX OS + NVIDIA AI stack. Slightly pricier than Spark but tighter Dell ecosystem.'},
   {id:'mini4x',   name:'4× Mac Mini M4 Pro (96GB)',cat:'cluster',cost:5200,vram:96, bw:960, tps7:70, tps70:30,  maxB:90, tdp:160,notes:'4× M4 Pro Mac Minis daisy-chained via Thunderbolt 5 (exo/llama.cpp). 96GB combined. Thunderbolt bandwidth is the bottleneck: ~40 GB/s per link. ~70 t/s on 7B single-node; distributed 70B ~30 t/s. DeepSeek 671B ~5 t/s on 8-node cluster.'},
   {id:'mini8x',   name:'8× Mac Mini M4 Pro (192GB)',cat:'cluster',cost:10400,vram:192,bw:1920,tps7:70, tps70:20,  maxB:180,tdp:320,notes:'8× M4 Pro Minis (exo cluster). 192GB combined. Runs DeepSeek 671B at ~5 t/s, Llama 70B ~20 t/s. Thunderbolt inter-node bandwidth severely limits large-model speed. Great for model capacity, not raw speed.'},
