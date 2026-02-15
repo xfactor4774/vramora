@@ -193,6 +193,11 @@ function yTickFmt(v) {
   return v + 'B';
 }
 
+function resetZoom() {
+  if (chart) chart.resetZoom();
+  document.getElementById('resetZoomBtn').style.display = 'none';
+}
+
 function initChart() {
   Chart.register(ChartDataLabels);
   const ctx = document.getElementById('chart').getContext('2d');
@@ -206,6 +211,23 @@ function initChart() {
       plugins: {
         legend: { display: false },
         tooltip: { enabled: false },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true, speed: 0.08 },
+            pinch: { enabled: true },
+            mode: 'xy',
+            onZoom: () => { document.getElementById('resetZoomBtn').style.display = ''; },
+          },
+          pan: {
+            enabled: true,
+            mode: 'xy',
+            onPan: () => { document.getElementById('resetZoomBtn').style.display = ''; },
+          },
+          limits: {
+            x: { minRange: 100 },
+            y: { minRange: 1 },
+          },
+        },
         datalabels: {
           color: (ctx) => document.body.classList.contains('light') ? '#1a1a2e' : '#ffffff',
           font: { size: 9, weight: '700', family: '-apple-system, BlinkMacSystemFont, sans-serif' },
@@ -311,6 +333,8 @@ function refreshChart() {
   chart.options.scales.y.title.text = yAxisLabel();
   chart.options.scales.y.ticks.callback = yTickFmt;
   chart.options.scales.x.title.text = xAxisLabel();
+  chart.resetZoom();
+  document.getElementById('resetZoomBtn').style.display = 'none';
   chart.update();
 }
 
@@ -903,6 +927,7 @@ function applyStoredCostMode() {
 }
 
 Chart.register(ChartDataLabels);
+if (typeof ChartZoom !== 'undefined') Chart.register(ChartZoom);
 populateModelSelect();
 populateHardwareSelect();
 applyStoredCostMode();
