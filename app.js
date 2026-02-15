@@ -249,15 +249,29 @@ function initChart() {
       scales: {
         x: {
           title: { display: true, text: xAxisLabel(), color: '#444', font: { size: 10 } },
-          ticks: { color: '#3a3a5a', callback: v => '$' + v.toLocaleString() },
+          ticks: { color: '#3a3a5a', callback: v => '$' + v.toLocaleString(), maxTicksLimit: 8 },
           grid: { color: '#16161e' },
           border: { color: '#222' },
+          bounds: 'ticks',
+          afterDataLimits: scale => {
+            const range = scale.max - scale.min;
+            const mag = Math.pow(10, Math.floor(Math.log10(range)) - 1);
+            scale.min = Math.floor(scale.min / mag) * mag;
+            scale.max = Math.ceil(scale.max / mag) * mag;
+          },
         },
         y: {
           title: { display: true, text: yAxisLabel(), color: '#444', font: { size: 10 } },
-          ticks: { color: '#3a3a5a', callback: yTickFmt },
+          ticks: { color: '#3a3a5a', callback: yTickFmt, maxTicksLimit: 8 },
           grid: { color: '#16161e' },
           border: { color: '#222' },
+          bounds: 'ticks',
+          afterDataLimits: scale => {
+            const range = scale.max - scale.min || 1;
+            const mag = Math.pow(10, Math.floor(Math.log10(range)) - 1);
+            scale.min = Math.max(0, Math.floor(scale.min / mag) * mag);
+            scale.max = Math.ceil(scale.max / mag) * mag;
+          },
         },
       },
       onHover: (event, elements) => {
