@@ -199,12 +199,27 @@ function resetZoom() {
   document.getElementById('resetZoomBtn').style.display = 'none';
 }
 
+// Inline plugin: fills chart canvas with a background color
+const chartBgPlugin = {
+  id: 'chartBg',
+  beforeDraw(chart) {
+    const light = document.body.classList.contains('light');
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = light ? '#faf9f7' : '#111118';
+    ctx.fillRect(0, 0, chart.width, chart.height);
+    ctx.restore();
+  }
+};
+
 function initChart() {
   Chart.register(ChartDataLabels);
   const ctx = document.getElementById('chart').getContext('2d');
   chart = new Chart(ctx, {
     type: 'bubble',
     data: { datasets: buildDatasets() },
+    plugins: [chartBgPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -248,10 +263,10 @@ function initChart() {
       },
       scales: {
         x: {
-          title: { display: true, text: xAxisLabel(), color: '#444', font: { size: 10 } },
-          ticks: { color: '#3a3a5a', callback: v => '$' + v.toLocaleString(), maxTicksLimit: 8 },
-          grid: { color: '#16161e' },
-          border: { color: '#222' },
+          title: { display: true, text: xAxisLabel(), color: '#888', font: { size: 10 } },
+          ticks: { color: '#aaa', callback: v => '$' + v.toLocaleString(), maxTicksLimit: 8 },
+          grid: { color: '#1e1e2e' },
+          border: { color: '#2a2a3a' },
           bounds: 'ticks',
           afterDataLimits: scale => {
             const range = scale.max - scale.min;
@@ -261,10 +276,10 @@ function initChart() {
           },
         },
         y: {
-          title: { display: true, text: yAxisLabel(), color: '#444', font: { size: 10 } },
-          ticks: { color: '#3a3a5a', callback: yTickFmt, maxTicksLimit: 8 },
-          grid: { color: '#16161e' },
-          border: { color: '#222' },
+          title: { display: true, text: yAxisLabel(), color: '#888', font: { size: 10 } },
+          ticks: { color: '#aaa', callback: yTickFmt, maxTicksLimit: 8 },
+          grid: { color: '#1e1e2e' },
+          border: { color: '#2a2a3a' },
           bounds: 'ticks',
           afterDataLimits: scale => {
             const range = scale.max - scale.min || 1;
@@ -906,10 +921,10 @@ function applyTheme(light) {
   document.getElementById('themeBtn').textContent = light ? '🌙 Dark' : '☀️ Light';
   localStorage.setItem('vramora-theme', light ? 'light' : 'dark');
   if (chart) {
-    const lc     = light ? '#e8e4de' : '#16161e';
-    const tc     = light ? '#b0a090' : '#3a3a5a';
-    const titleC = light ? '#9e8e7e' : '#444';
-    const bc     = light ? '#e8e4de' : '#222';
+    const lc     = light ? '#e8e4de' : '#1e1e2e';
+    const tc     = light ? '#b0a090' : '#aaa';
+    const titleC = light ? '#9e8e7e' : '#888';
+    const bc     = light ? '#e8e4de' : '#2a2a3a';
     chart.options.scales.x.grid.color   = lc;
     chart.options.scales.y.grid.color   = lc;
     chart.options.scales.x.ticks.color  = tc;
