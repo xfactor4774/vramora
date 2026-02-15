@@ -3,44 +3,57 @@ const CAT_COL = {nvidia:'#5eead4', apple:'#a78bfa', system:'#fb923c', cluster:'#
 const CAT_LBL = {nvidia:'NVIDIA GPU Rig', apple:'Apple Silicon', system:'Packaged System', cluster:'Mac Mini Cluster'};
 
 const DATA = [
-  {id:'rtx3060',  name:'RTX 3060',               cat:'nvidia',cost:600, vram:12, bw:360, tps7:60, tps70:null,maxB:7,  tdp:220,notes:'12GB VRAM limits to 7B Q4. Budget LLM entry point. Used GPU ~$160–180 + budget platform ~$430.'},
-  {id:'rtx3080ti',name:'RTX 3080 Ti',             cat:'nvidia',cost:950, vram:12, bw:912, tps7:108,tps70:null,maxB:7,  tdp:320,notes:'Fast bandwidth, 12GB cap. Blinding 7B speed but nowhere to grow. Used GPU ~$400–420 + mid platform ~$530.'},
-  {id:'rtx4080',  name:'RTX 4080',                cat:'nvidia',cost:1500,vram:16, bw:716, tps7:113,tps70:null,maxB:13, tdp:290,notes:'16GB handles 13B. Ada Lovelace efficiency improvements. GPU ~$850 new + platform ~$650.'},
-  {id:'rtx4000a', name:'RTX 4000 Ada (20GB)',     cat:'nvidia',cost:1900,vram:20, bw:360, tps7:65, tps70:null,maxB:13, tdp:200,notes:'Pro workstation card. 20GB VRAM, very low power. Bandwidth-limited. Used GPU ~$1,200 + workstation platform ~$700.'},
-  {id:'rtx3090',  name:'RTX 3090',                cat:'nvidia',cost:1200,vram:24, bw:936, tps7:121,tps70:null,maxB:30, tdp:490,notes:'The sweet spot. Used GPU ~$700–750, 24GB VRAM. Runs 30B Q4. Outstanding bang/buck at this price.'},
-  {id:'rtx4090',  name:'RTX 4090',                cat:'nvidia',cost:2500,vram:24, bw:1008,tps7:139,tps70:null,maxB:30, tdp:480,notes:'Fastest single consumer GPU. GPU ~$1,800–2,000 street + platform ~$700. Still 24GB VRAM cap.'},
-  {id:'rtxA6000', name:'RTX A6000 (48GB)',        cat:'nvidia',cost:2900,vram:48, bw:768, tps7:107,tps70:22,  maxB:65, tdp:450,notes:'Pro workstation. 48GB single-card VRAM — no NVLink needed. Used GPU ~$2,200 + workstation ~$700. Runs 65B Q4.'},
-  {id:'dual3090', name:'2× RTX 3090',             cat:'nvidia',cost:2250,vram:48, bw:936, tps7:121,tps70:20,  maxB:65, tdp:830,notes:'NVLink bridge: 48GB combined. Used GPUs ~$1,450 + NVLink ~$100 + platform ~$700. 65B Q4 ~20 t/s. Incredible value.'},
-  {id:'dual4090', name:'2× RTX 4090',             cat:'nvidia',cost:4800,vram:48, bw:1008,tps7:139,tps70:28,  maxB:70, tdp:810,notes:'NVLink, 48GB combined. GPUs ~$3,800 + platform ~$1,000. 70B Q4 ~28 t/s. Speed king.'},
-  {id:'tri3090',  name:'3× RTX 3090',             cat:'nvidia',cost:3100,vram:72, bw:936, tps7:121,tps70:40,  maxB:120,tdp:1170,notes:'72GB VRAM. Used GPUs ~$2,150 + bridges + HEDT platform ~$950. 120B Q4 capable. 124 t/s tg32 on 120B MXFP4 (llama.cpp).'},
-  {id:'m3max48',  name:'M3 Max Studio (48GB)',    cat:'apple', cost:3999,vram:48, bw:400, tps7:66, tps70:18,  maxB:65, tdp:50, notes:'Silent, efficient. 48GB unified. $3,999. ~40-50W under LLM load.'},
-  {id:'m4max64',  name:'M4 Max Studio (64GB)',    cat:'apple', cost:4999,vram:64, bw:410, tps7:80, tps70:25,  maxB:70, tdp:55, notes:'M4 Max. 64GB unified. Qwen3 30B-A3B >100 t/s via MLX.'},
-  {id:'m4max128', name:'M4 Max Studio (128GB)',   cat:'apple', cost:7199,vram:128,bw:546, tps7:80, tps70:40,  maxB:120,tdp:60, notes:'128GB unified memory. Silent powerhouse. Handles 120B Q4.'},
-  {id:'m2ultra',  name:'M2 Ultra Studio (192GB)', cat:'apple', cost:6999,vram:192,bw:800, tps7:94, tps70:30,  maxB:180,tdp:90, notes:'192GB unified. 70B prompt eval ~117 t/s. Excellent big-model machine.'},
-  {id:'m3ultra',  name:'M3 Ultra Studio (256GB)', cat:'apple', cost:9999,vram:256,bw:819, tps7:105,tps70:71,  maxB:200,tdp:110,notes:'256GB unified. 70 t/s tg32 on 120B MXFP4. Top of Apple lineup.'},
-  {id:'m4ultra',  name:'M4 Ultra Studio (est.)',  cat:'apple', cost:8999,vram:192,bw:820, tps7:120,tps70:55,  maxB:180,tdp:100,notes:'M4 Ultra estimated. Best t/s per watt of any platform.'},
-  {id:'dgxspark', name:'NVIDIA DGX Spark',        cat:'system',cost:3999,vram:128,bw:275, tps7:60, tps70:39,  maxB:200,tdp:120,notes:'GB10 Grace Blackwell, 128GB LPDDR5. $3,999. NVFP4 unlocks large-model perf. AI lab in a box.'},
+  // gpuCost = GPU card(s) only; cost = full system (GPU + platform)
+  // For Apple/packaged/cluster: gpuCost === cost (no separable GPU swap)
+  {id:'rtx3060',  name:'RTX 3060',               cat:'nvidia',cost:600,  gpuCost:170,  vram:12, bw:360,  tps7:60,  tps70:null,maxB:7,  tdp:220, notes:'12GB VRAM limits to 7B Q4. Budget LLM entry point. Used GPU ~$160–180 + budget platform ~$430.'},
+  {id:'rtx3080ti',name:'RTX 3080 Ti',             cat:'nvidia',cost:950,  gpuCost:410,  vram:12, bw:912,  tps7:108, tps70:null,maxB:7,  tdp:320, notes:'Fast bandwidth, 12GB cap. Blinding 7B speed but nowhere to grow. Used GPU ~$400–420 + mid platform ~$530.'},
+  {id:'rtx4080',  name:'RTX 4080',                cat:'nvidia',cost:1500, gpuCost:850,  vram:16, bw:716,  tps7:113, tps70:null,maxB:13, tdp:290, notes:'16GB handles 13B. Ada Lovelace efficiency improvements. GPU ~$850 new + platform ~$650.'},
+  {id:'rtx4000a', name:'RTX 4000 Ada (20GB)',     cat:'nvidia',cost:1900, gpuCost:1200, vram:20, bw:360,  tps7:65,  tps70:null,maxB:13, tdp:200, notes:'Pro workstation card. 20GB VRAM, very low power. Bandwidth-limited. Used GPU ~$1,200 + workstation platform ~$700.'},
+  {id:'rtx3090',  name:'RTX 3090',                cat:'nvidia',cost:1200, gpuCost:725,  vram:24, bw:936,  tps7:121, tps70:null,maxB:30, tdp:490, notes:'The sweet spot. Used GPU ~$700–750, 24GB VRAM. Runs 30B Q4. Outstanding bang/buck at this price.'},
+  {id:'rtx4090',  name:'RTX 4090',                cat:'nvidia',cost:2500, gpuCost:1900, vram:24, bw:1008, tps7:139, tps70:null,maxB:30, tdp:480, notes:'Fastest single consumer GPU. GPU ~$1,800–2,000 street + platform ~$700. Still 24GB VRAM cap.'},
+  {id:'rtxA6000', name:'RTX A6000 (48GB)',        cat:'nvidia',cost:2900, gpuCost:2200, vram:48, bw:768,  tps7:107, tps70:22,  maxB:65, tdp:450, notes:'Pro workstation. 48GB single-card VRAM — no NVLink needed. Used GPU ~$2,200 + workstation ~$700. Runs 65B Q4.'},
+  {id:'dual3090', name:'2× RTX 3090',             cat:'nvidia',cost:2250, gpuCost:1550, vram:48, bw:936,  tps7:121, tps70:20,  maxB:65, tdp:830, notes:'NVLink bridge: 48GB combined. Used GPUs ~$1,450 + NVLink ~$100 + platform ~$700. 65B Q4 ~20 t/s. Incredible value.'},
+  {id:'dual4090', name:'2× RTX 4090',             cat:'nvidia',cost:4800, gpuCost:3800, vram:48, bw:1008, tps7:139, tps70:28,  maxB:70, tdp:810, notes:'NVLink, 48GB combined. GPUs ~$3,800 + platform ~$1,000. 70B Q4 ~28 t/s. Speed king.'},
+  {id:'tri3090',  name:'3× RTX 3090',             cat:'nvidia',cost:3100, gpuCost:2250, vram:72, bw:936,  tps7:121, tps70:40,  maxB:120,tdp:1170,notes:'72GB VRAM. Used GPUs ~$2,150 + bridges + HEDT platform ~$950. 120B Q4 capable. 124 t/s tg32 on 120B MXFP4 (llama.cpp).'},
+  {id:'m3max48',  name:'M3 Max Studio (48GB)',    cat:'apple', cost:3999, gpuCost:3999, vram:48, bw:400,  tps7:66,  tps70:18,  maxB:65, tdp:50,  notes:'Silent, efficient. 48GB unified. $3,999. ~40-50W under LLM load.'},
+  {id:'m4max64',  name:'M4 Max Studio (64GB)',    cat:'apple', cost:4999, gpuCost:4999, vram:64, bw:410,  tps7:80,  tps70:25,  maxB:70, tdp:55,  notes:'M4 Max. 64GB unified. Qwen3 30B-A3B >100 t/s via MLX.'},
+  {id:'m4max128', name:'M4 Max Studio (128GB)',   cat:'apple', cost:7199, gpuCost:7199, vram:128,bw:546,  tps7:80,  tps70:40,  maxB:120,tdp:60,  notes:'128GB unified memory. Silent powerhouse. Handles 120B Q4.'},
+  {id:'m2ultra',  name:'M2 Ultra Studio (192GB)', cat:'apple', cost:6999, gpuCost:6999, vram:192,bw:800,  tps7:94,  tps70:30,  maxB:180,tdp:90,  notes:'192GB unified. 70B prompt eval ~117 t/s. Excellent big-model machine.'},
+  {id:'m3ultra',  name:'M3 Ultra Studio (256GB)', cat:'apple', cost:9999, gpuCost:9999, vram:256,bw:819,  tps7:105, tps70:71,  maxB:200,tdp:110, notes:'256GB unified. 70 t/s tg32 on 120B MXFP4. Top of Apple lineup.'},
+  {id:'m4ultra',  name:'M4 Ultra Studio (est.)',  cat:'apple', cost:8999, gpuCost:8999, vram:192,bw:820,  tps7:120, tps70:55,  maxB:180,tdp:100, notes:'M4 Ultra estimated. Best t/s per watt of any platform.'},
+  {id:'dgxspark', name:'NVIDIA DGX Spark',        cat:'system',cost:3999, gpuCost:3999, vram:128,bw:275,  tps7:60,  tps70:39,  maxB:200,tdp:120, notes:'GB10 Grace Blackwell, 128GB LPDDR5. $3,999. NVFP4 unlocks large-model perf. AI lab in a box.'},
 
   // ── NEW ──
-  {id:'rtx5090',  name:'RTX 5090',                cat:'nvidia',cost:4700,vram:32, bw:1792,tps7:186,tps70:null,maxB:30, tdp:575,notes:'Blackwell GB202, 32GB GDDR7, 1792 GB/s bandwidth. GPU ~$3,999–4,000 street + platform ~$700. Blazing fast on 7B–32B. Still 32GB cap — no 70B without multi-GPU.'},
-  {id:'dellgb10', name:'Dell Pro Max (GB10)',      cat:'system',cost:4600,vram:128,bw:275, tps7:60, tps70:39,  maxB:200,tdp:125,notes:'Same GB10 Grace Blackwell chip as DGX Spark, 128GB LPDDR5x. $4,600. Ships with DGX OS + NVIDIA AI stack. Slightly pricier than Spark but tighter Dell ecosystem.'},
-  {id:'mini4x',   name:'4× Mac Mini M4 Pro (96GB)',cat:'cluster',cost:5200,vram:96, bw:960, tps7:70, tps70:30,  maxB:90, tdp:160,notes:'4× M4 Pro Mac Minis daisy-chained via Thunderbolt 5 (exo/llama.cpp). 96GB combined. Thunderbolt bandwidth is the bottleneck: ~40 GB/s per link. ~70 t/s on 7B single-node; distributed 70B ~30 t/s. DeepSeek 671B ~5 t/s on 8-node cluster.'},
-  {id:'mini8x',   name:'8× Mac Mini M4 Pro (192GB)',cat:'cluster',cost:10400,vram:192,bw:1920,tps7:70, tps70:20,  maxB:180,tdp:320,notes:'8× M4 Pro Minis (exo cluster). 192GB combined. Runs DeepSeek 671B at ~5 t/s, Llama 70B ~20 t/s. Thunderbolt inter-node bandwidth severely limits large-model speed. Great for model capacity, not raw speed.'},
+  {id:'rtx5090',  name:'RTX 5090',                cat:'nvidia',cost:4700, gpuCost:4000, vram:32, bw:1792, tps7:186, tps70:null,maxB:30, tdp:575, notes:'Blackwell GB202, 32GB GDDR7, 1792 GB/s bandwidth. GPU ~$3,999–4,000 street + platform ~$700. Blazing fast on 7B–32B. Still 32GB cap — no 70B without multi-GPU.'},
+  {id:'dellgb10', name:'Dell Pro Max (GB10)',      cat:'system',cost:4600, gpuCost:4600, vram:128,bw:275,  tps7:60,  tps70:39,  maxB:200,tdp:125, notes:'Same GB10 Grace Blackwell chip as DGX Spark, 128GB LPDDR5x. $4,600. Ships with DGX OS + NVIDIA AI stack. Slightly pricier than Spark but tighter Dell ecosystem.'},
+  {id:'mini4x',   name:'4× Mac Mini M4 Pro (96GB)', cat:'cluster',cost:5200, gpuCost:5200, vram:96, bw:960,  tps7:70,  tps70:30,  maxB:90, tdp:160, notes:'4× M4 Pro Mac Minis daisy-chained via Thunderbolt 5 (exo/llama.cpp). 96GB combined. Thunderbolt bandwidth is the bottleneck: ~40 GB/s per link. ~70 t/s on 7B single-node; distributed 70B ~30 t/s. DeepSeek 671B ~5 t/s on 8-node cluster.'},
+  {id:'mini8x',   name:'8× Mac Mini M4 Pro (192GB)',cat:'cluster',cost:10400,gpuCost:10400,vram:192,bw:1920, tps7:70,  tps70:20,  maxB:180,tdp:320, notes:'8× M4 Pro Minis (exo cluster). 192GB combined. Runs DeepSeek 671B at ~5 t/s, Llama 70B ~20 t/s. Thunderbolt inter-node bandwidth severely limits large-model speed. Great for model capacity, not raw speed.'},
 ];
 
 DATA.forEach(d => {
-  d.tpw   = +(d.tps7 / d.tdp).toFixed(2);
+  d.tpw = +(d.tps7 / d.tdp).toFixed(2);
+  // value is recomputed dynamically via getEffectiveCost — init with system cost
   d.value = +(d.tps7 / d.cost * 1000).toFixed(1);
 });
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let activeCats = new Set(['nvidia','apple','system','cluster']);
-let activeVram = new Set(['12','24','48','96','192','512']);
-let yMode      = 'max_params';
-let hlMode     = 'none';
-let sortCol    = 'cost';
-let sortAsc    = true;
+let activeCats  = new Set(['nvidia','apple','system','cluster']);
+let activeVram  = new Set(['12','24','48','96','192','512']);
+let yMode       = 'max_params';
+let hlMode      = 'none';
+let sortCol     = 'cost';
+let sortAsc     = true;
 let currentView = 'chart';
+let gpuOnlyMode = false; // toggle: GPU-only cost vs full system cost
+
+// Returns the cost to use for X-axis / value calculations
+function getEffectiveCost(d) {
+  return gpuOnlyMode ? d.gpuCost : d.cost;
+}
+
+function xAxisLabel() {
+  return gpuOnlyMode ? 'GPU Cost Only (USD)' : 'System Cost (USD)';
+}
 
 function vramBucket(v) {
   if (v <= 12)  return '12';
@@ -66,12 +79,16 @@ function getY(d) {
   return d.maxB;
 }
 
+function getEffectiveValue(d) {
+  return +(d.tps7 / getEffectiveCost(d) * 1000).toFixed(1);
+}
+
 function isHighlighted(d) {
   if (hlMode === 'none') return false;
   const v = visible();
   if (!v.length) return false;
   const best = {
-    best_value: v.reduce((a,x) => x.value > a.value ? x : a),
+    best_value: v.reduce((a,x) => getEffectiveValue(x) > getEffectiveValue(a) ? x : a),
     fastest:    v.reduce((a,x) => (x.tps7||0) > (a.tps7||0) ? x : a),
     efficient:  v.reduce((a,x) => x.tpw > a.tpw ? x : a),
     most_vram:  v.reduce((a,x) => x.vram > a.vram ? x : a),
@@ -153,7 +170,7 @@ function initChart() {
       },
       scales: {
         x: {
-          title: { display: true, text: 'System Cost (USD)', color: '#444', font: { size: 10 } },
+          title: { display: true, text: xAxisLabel(), color: '#444', font: { size: 10 } },
           ticks: { color: '#3a3a5a', callback: v => '$' + v.toLocaleString() },
           grid: { color: '#16161e' },
           border: { color: '#222' },
@@ -171,15 +188,20 @@ function initChart() {
         const d = chart.data.datasets[elements[0].datasetIndex].data[elements[0].index]._raw;
         const col = pwHex(d.tdp);
         const pct = Math.round(Math.min(100, (d.tdp - 40) / 1160 * 100));
+        const effCost = getEffectiveCost(d);
+        const costLine = gpuOnlyMode
+          ? `<div class="tt-r"><span>🎮 GPU Cost</span><span>$${d.gpuCost.toLocaleString()}</span></div>
+             <div class="tt-r"><span>💰 System Cost</span><span>$${d.cost.toLocaleString()}</span></div>`
+          : `<div class="tt-r"><span>💰 System Cost</span><span>$${d.cost.toLocaleString()}</span></div>`;
         tt.innerHTML = `
           <div class="tt-name">${d.name}</div>
-          <div class="tt-r"><span>💰 Cost</span><span>$${d.cost.toLocaleString()}</span></div>
+          ${costLine}
           <div class="tt-r"><span>🧠 Memory</span><span>${d.vram} GB</span></div>
           <div class="tt-r"><span>⚡ 7B Q4</span><span>${d.tps7} t/s</span></div>
           <div class="tt-r"><span>🐢 70B Q4</span><span>${d.tps70 ? d.tps70 + ' t/s' : 'OOM / N/A'}</span></div>
           <div class="tt-r"><span>📏 Max Model</span><span>~${d.maxB}B (Q4)</span></div>
           <div class="tt-r"><span>🚀 Bandwidth</span><span>${d.bw} GB/s</span></div>
-          <div class="tt-r"><span>💡 Value</span><span>${d.value} t/s per $1k</span></div>
+          <div class="tt-r"><span>💡 Value</span><span>${getEffectiveValue(d)} t/s per $1k</span></div>
           <div class="tt-pw">
             <div class="tt-r" style="margin:0"><span>🔋 Power</span><span>${d.tdp}W system TDP</span></div>
             <div class="tt-pw-bg"><div class="tt-pw-fill" style="width:${pct}%;background:${col}"></div></div>
@@ -209,6 +231,7 @@ function refreshChart() {
   chart.data.datasets = buildDatasets();
   chart.options.scales.y.title.text = yAxisLabel();
   chart.options.scales.y.ticks.callback = yTickFmt;
+  chart.options.scales.x.title.text = xAxisLabel();
   chart.update();
 }
 
@@ -285,6 +308,7 @@ function encodeState() {
   params.set('cats', [...activeCats].join(','));
   params.set('vram', [...activeVram].join(','));
   if (selectedModel) params.set('model', selectedModel);
+  if (gpuOnlyMode)   params.set('gpuonly', '1');
   return '#' + params.toString();
 }
 
@@ -306,6 +330,10 @@ function decodeState() {
     selectedModel = params.get('model');
     document.getElementById('modelSelect').value = selectedModel;
     showModelBanner();
+  }
+  if (params.get('gpuonly') === '1') {
+    gpuOnlyMode = true;
+    document.getElementById('costMode').checked = true;
   }
   if (params.get('view')) setView(params.get('view'));
 }
@@ -343,7 +371,7 @@ function buildDatasets() {
   });
   return Object.entries(groups).map(([cat, items]) => ({
     label: CAT_LBL[cat],
-    data: items.map(d => ({ x: d.cost, y: getY(d), r: bubbleR(d.tps7), _raw: d })),
+    data: items.map(d => ({ x: getEffectiveCost(d), y: getY(d), r: bubbleR(d.tps7), _raw: d })),
     backgroundColor: items.map(d => {
       const ma = modelAlpha(d);
       const base = ma !== null ? ma : (isHighlighted(d) ? 0.92 : 0.70);
@@ -381,7 +409,9 @@ function renderTable() {
       <tr style="${rowStyle}">
         <td class="nm">${d.name}${fitBadge}</td>
         <td><span class="badge" style="background:${col}22;color:${col}">${CAT_LBL[d.cat]}</span></td>
-        <td>$${d.cost.toLocaleString()}</td>
+        <td>${gpuOnlyMode
+          ? `<span title="System: $${d.cost.toLocaleString()}">$${d.gpuCost.toLocaleString()} <span style="font-size:.6rem;color:#555">(GPU)</span></span>`
+          : `$${d.cost.toLocaleString()}`}</td>
         <td>${d.vram} GB</td>
         <td style="color:#5eead4;font-weight:600">${d.tps7}</td>
         <td>${d.tps70 != null ? d.tps70 : '—'}</td>
@@ -393,7 +423,7 @@ function renderTable() {
           </div>
         </td>
         <td style="color:#a78bfa;font-weight:600">${d.tpw}</td>
-        <td style="color:#fb923c;font-weight:600">${d.value}</td>
+        <td style="color:#fb923c;font-weight:600">${getEffectiveValue(d)}</td>
       </tr>`;
   }).join('');
 
@@ -412,14 +442,14 @@ function renderTable() {
 function updateStats() {
   const v = visible();
   if (!v.length) return;
-  const bv  = v.reduce((a,x) => x.value > a.value ? x : a);
+  const bv  = v.reduce((a,x) => getEffectiveValue(x) > getEffectiveValue(a) ? x : a);
   const bsp = v.reduce((a,x) => (x.tps7||0) > (a.tps7||0) ? x : a);
   const bef = v.reduce((a,x) => x.tpw > a.tpw ? x : a);
   const bmm = v.reduce((a,x) => x.vram > a.vram ? x : a);
   const bmd = v.reduce((a,x) => x.maxB > a.maxB ? x : a);
 
   document.getElementById('s-val').textContent  = bv.name;
-  document.getElementById('s-val2').textContent = bv.value + ' t/s per $1k';
+  document.getElementById('s-val2').textContent = getEffectiveValue(bv) + ' t/s per $1k';
   document.getElementById('s-spd').textContent  = bsp.name;
   document.getElementById('s-spd2').textContent = bsp.tps7 + ' t/s (7B Q4)';
   document.getElementById('s-eff').textContent  = bef.name;
@@ -467,6 +497,12 @@ document.querySelectorAll('.vf').forEach(cb => {
 
 document.getElementById('yMode').addEventListener('change', e => { yMode = e.target.value; refresh(); });
 document.getElementById('hlMode').addEventListener('change', e => { hlMode = e.target.value; refresh(); });
+
+document.getElementById('costMode').addEventListener('change', e => {
+  gpuOnlyMode = e.target.checked;
+  localStorage.setItem('vramora-costmode', gpuOnlyMode ? '1' : '0');
+  refresh();
+});
 
 document.getElementById('modelSelect').addEventListener('change', e => {
   selectedModel = e.target.value || null;
@@ -544,8 +580,18 @@ function applyStoredTheme() {
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
+function applyStoredCostMode() {
+  // URL hash takes priority over localStorage
+  const hashHasGpuOnly = location.hash.includes('gpuonly=1');
+  if (!hashHasGpuOnly && localStorage.getItem('vramora-costmode') === '1') {
+    gpuOnlyMode = true;
+    document.getElementById('costMode').checked = true;
+  }
+}
+
 Chart.register(ChartDataLabels);
 populateModelSelect();
+applyStoredCostMode();
 decodeState();
 initChart();
 updateStats();

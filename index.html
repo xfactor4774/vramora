@@ -316,6 +316,7 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
       <div class="help-section">
         <h3>Filters &amp; Controls</h3>
         <div class="help-item"><div class="help-icon">☑️</div><div class="help-text"><strong>Sidebar filters</strong> let you narrow by hardware type (NVIDIA / Apple / System / Cluster) and memory tier.</div></div>
+        <div class="help-item"><div class="help-icon">💸</div><div class="help-text"><strong>GPU-only cost:</strong> Check this if you already have a PC and just want to compare the GPU swap cost. Shifts the X-axis and recalculates value scores to reflect GPU cost only instead of full system cost.</div></div>
         <div class="help-item"><div class="help-icon">📊</div><div class="help-text"><strong>Y-Axis dropdown:</strong> Switch between Max Model Size, VRAM, Token Speed, or Efficiency (t/s per Watt).</div></div>
         <div class="help-item"><div class="help-icon">✨</div><div class="help-text"><strong>Highlight dropdown:</strong> Visually singles out the best value, fastest, most efficient, or most memory option from the current filtered set.</div></div>
       </div>
@@ -348,6 +349,19 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
       <button class="modal-close" onclick="closeModal('changelog')">✕</button>
     </div>
     <div class="modal-body">
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 14, 2026</div>
+        <div class="cl-title">GPU-only cost toggle <span class="cl-tag feat">Feature</span></div>
+        <ul class="cl-items">
+          <li>New ☑️ checkbox in sidebar: "GPU-only cost (no platform)"</li>
+          <li>Toggles X-axis between full system cost and GPU card cost only</li>
+          <li>Useful for people who already have a PC and just want to compare GPU swap cost</li>
+          <li>Value (t/s per $1k) and Best Value stat card recalculate to reflect selected cost mode</li>
+          <li>Tooltip shows both GPU cost and system cost when GPU-only mode is active</li>
+          <li>Preference persists in localStorage and encodes into shareable URLs</li>
+        </ul>
+      </div>
 
       <div class="cl-entry">
         <div class="cl-date">Feb 14, 2026</div>
@@ -446,7 +460,12 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
       <label><input type="checkbox" class="vf" data-vram="512" checked>193+ GB</label>
     </div>
     <div class="sb">
-      <h3>Color = Power Draw</h3>
+      <h3>Cost Mode</h3>
+ <label style="display:flex;align-items:center;gap:7px;font-size:.77rem;color:#888;cursor:pointer;padding:4px 0;user-select:none"><input type="checkbox" id="costMode" style="width:13px;height:13px;accent-color:#7c6af7;cursor:pointer"><span>GPU-only cost (no platform)</span></label>
+ <div style="font-size:.64rem;color:#2e2e4a;margin-top:5px">Toggle to show just GPU cost vs full system cost. Persists via localStorage.</div>
+ </div>
+ <div class="sb">
+ <h3>Color = Power Draw</h3>
       <div class="pw-bar"></div>
       <div class="pw-lbl"><span>Low (~40W)</span><span>High (1000W+)</span></div>
       <div style="font-size:.64rem;color:#2e2e4a;margin-top:5px">Estimated full-system TDP under LLM load</div>
