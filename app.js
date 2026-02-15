@@ -52,8 +52,7 @@ let selectedHardware = []; // array of hardware IDs for hardware mode
 const MODEL_SIZES = [1, 3, 7, 13, 30, 70, 120, 200, 400];
 
 // Estimate t/s for a given hardware config and model size
-// Formula: t/s ≈ (bandwidth_GB_s / (params_B × bytes_per_param)) × efficiency_factor
-// Q4 ≈ 0.5 bytes/param, real-world efficiency ~45% of theoretical
+// Uses interpolation between known benchmarks when available
 function getEstimatedTps(hw, paramB) {
   // Check VRAM constraint: Q4 needs ~0.6 GB per billion params (with overhead)
   const vramNeeded = paramB * 0.6;
@@ -63,11 +62,25 @@ function getEstimatedTps(hw, paramB) {
   if (paramB === 7 && hw.tps7) return hw.tps7;
   if (paramB === 70 && hw.tps70) return hw.tps70;
   
-  // Estimate from bandwidth
   const bytesPerParam = 0.5; // Q4
-  const theoretical = hw.bw / (paramB * bytesPerParam);
   
-  // Calibrate efficiency based on actual 7B benchmark if available
+  // If we have both 7B and 70B benchmarks, interpolate/extrapolate using log scale
+  // t/s roughly follows: tps ∝ 1/params (linear in log-log space)
+  if (hw.tps7 && hw.tps70) {
+    // Log-linear interpolation between known points
+    const log7 = Math.log(7), log70 = Math.log(70);
+    const logTps7 = Math.log(hw.tps7), logTps70 = Math.log(hw.tps70);
+    const logParam = Math.log(paramB);
+    
+    // slope in log-log space
+    const slope = (logTps70 - logTps7) / (log70 - log7);
+    const logTps = logTps7 + slope * (logParam - log7);
+    
+    return Math.round(Math.exp(logTps));
+  }
+  
+  // Fallback: estimate from bandwidth with calibrated efficiency
+  const theoretical = hw.bw / (paramB * bytesPerParam);
   let efficiency = 0.45; // default
   if (hw.tps7) {
     const theoretical7B = hw.bw / (7 * bytesPerParam);
@@ -332,14 +345,69 @@ function clearModel() {
 
 // ─── HARDWARE MODE ───────────────────────────────────────────────────────────
 function populateHardwareSelect() {
-  const sel = document.getElementById('hardwareSelect');
+  const list = document.getElementById('hwDropdownList');
   DATA.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d.id;
-    opt.textContent = `${d.name} (${d.vram}GB)`;
-    opt.style.color = CAT_COL[d.cat];
-    sel.appendChild(opt);
+    const item = document.createElement('label');
+    item.className = 'hw-dropdown-item';
+    item.dataset.id = d.id;
+    item.innerHTML = `
+      <input type="checkbox" value="${d.id}">
+      <span class="hw-dot" style="background:${CAT_COL[d.cat]}"></span>
+      <span>${d.name} (${d.vram}GB)</span>
+    `;
+    item.querySelector('input').addEventListener('change', onHwCheckChange);
+    list.appendChild(item);
   });
+}
+
+function toggleHwDropdown() {
+  const menu = document.getElementById('hwDropdownMenu');
+  menu.classList.toggle('hidden');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  const dropdown = document.querySelector('.hw-dropdown');
+  const menu = document.getElementById('hwDropdownMenu');
+  if (dropdown && !dropdown.contains(e.target) && menu && !menu.classList.contains('hidden')) {
+    menu.classList.add('hidden');
+  }
+});
+
+function onHwCheckChange() {
+  updateHwDropdownLabel();
+  rebuildChart();
+  pushState();
+}
+
+function updateHwDropdownLabel() {
+  const checked = document.querySelectorAll('#hwDropdownList input:checked');
+  const label = document.getElementById('hwDropdownLabel');
+  if (checked.length === 0) {
+    label.textContent = 'Select hardware...';
+  } else if (checked.length <= 2) {
+    const names = [...checked].map(cb => {
+      const hw = DATA.find(d => d.id === cb.value);
+      return hw ? hw.name.replace('RTX ', '').replace(' Studio', '').replace(' (est.)', '') : cb.value;
+    });
+    label.textContent = names.join(', ');
+  } else {
+    label.textContent = `${checked.length} selected`;
+  }
+  // Update selected state styling
+  document.querySelectorAll('.hw-dropdown-item').forEach(item => {
+    item.classList.toggle('selected', item.querySelector('input').checked);
+  });
+}
+
+function selectAllHw() {
+  document.querySelectorAll('#hwDropdownList input').forEach(cb => cb.checked = true);
+  onHwCheckChange();
+}
+
+function clearAllHw() {
+  document.querySelectorAll('#hwDropdownList input').forEach(cb => cb.checked = false);
+  onHwCheckChange();
 }
 
 function setCompareMode(mode) {
@@ -348,6 +416,7 @@ function setCompareMode(mode) {
   document.getElementById('btn-mode-hardware').classList.toggle('active', mode === 'hardware');
   document.getElementById('modelModeControls').classList.toggle('hidden', mode !== 'model');
   document.getElementById('hardwareModeControls').classList.toggle('hidden', mode !== 'hardware');
+  document.getElementById('hwEstimateNote').classList.toggle('hidden', mode !== 'hardware');
   
   // Clear model banner when switching modes
   if (mode === 'hardware') {
@@ -359,8 +428,8 @@ function setCompareMode(mode) {
 }
 
 function getSelectedHardwareIds() {
-  const sel = document.getElementById('hardwareSelect');
-  return [...sel.selectedOptions].map(o => o.value);
+  const checked = document.querySelectorAll('#hwDropdownList input:checked');
+  return [...checked].map(cb => cb.value);
 }
 
 function buildHardwareDatasets() {
@@ -507,12 +576,13 @@ function decodeState() {
     document.getElementById('btn-mode-hardware').classList.add('active');
     document.getElementById('modelModeControls').classList.add('hidden');
     document.getElementById('hardwareModeControls').classList.remove('hidden');
+    document.getElementById('hwEstimateNote').classList.remove('hidden');
     if (params.get('hw')) {
       const hwIds = params.get('hw').split(',');
-      const sel = document.getElementById('hardwareSelect');
-      [...sel.options].forEach(opt => {
-        opt.selected = hwIds.includes(opt.value);
+      document.querySelectorAll('#hwDropdownList input').forEach(cb => {
+        cb.checked = hwIds.includes(cb.value);
       });
+      updateHwDropdownLabel();
     }
   }
   if (params.get('view')) setView(params.get('view'));
@@ -690,10 +760,7 @@ document.getElementById('modelSelect').addEventListener('change', e => {
   refresh();
 });
 
-document.getElementById('hardwareSelect').addEventListener('change', () => {
-  rebuildChart();
-  pushState();
-});
+// Hardware selection handled via onHwCheckChange()
 
 document.querySelectorAll('thead th[data-col]').forEach(th => {
   th.addEventListener('click', () => {

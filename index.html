@@ -156,17 +156,44 @@ tbody tr:hover td{background:#13131c}
 .sc .sb2{font-size:.62rem;color:#3a3a5a;margin-top:1px}
 .hidden{display:none!important}
 
-/* Hardware mode multi-select */
-#hardwareSelect{background:#18181f;border:1px solid #2a2a3a;color:#bbb;padding:4px 10px;border-radius:6px;font-size:.74rem;cursor:pointer;height:auto;min-height:28px}
-#hardwareSelect:hover{border-color:#7c6af7}
-#hardwareSelect option{padding:4px 8px}
-#hardwareSelect option:checked{background:#7c6af7;color:#fff}
-body.light #hardwareSelect{background:#fff;border-color:#e8e4de;color:#3d2b1a}
-body.light #hardwareSelect option:checked{background:#d97706;color:#fff}
+/* Hardware mode dropdown */
+.hw-dropdown{position:relative;display:inline-block}
+.hw-dropdown-btn{background:#18181f;border:1px solid #2a2a3a;color:#bbb;padding:6px 12px;border-radius:6px;font-size:.74rem;cursor:pointer;min-width:220px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hw-dropdown-btn:hover{border-color:#7c6af7}
+.hw-arrow{font-size:.6rem;opacity:.6}
+.hw-dropdown-menu{position:absolute;top:100%;left:0;margin-top:4px;background:#18181f;border:1px solid #2a2a3a;border-radius:8px;min-width:260px;max-height:320px;overflow-y:auto;z-index:150;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.hw-dropdown-menu.hidden{display:none!important}
+.hw-dropdown-actions{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid #2a2a3a}
+.hw-dropdown-actions button{background:#2a2a3a;border:none;color:#888;padding:4px 10px;border-radius:4px;font-size:.68rem;cursor:pointer}
+.hw-dropdown-actions button:hover{background:#3a3a4a;color:#ccc}
+.hw-dropdown-list{padding:6px 0}
+.hw-dropdown-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:.75rem;color:#999;transition:background .1s}
+.hw-dropdown-item:hover{background:#1e1e28}
+.hw-dropdown-item.selected{color:#fff;background:#1a1a24}
+.hw-dropdown-item input{width:14px;height:14px;accent-color:#7c6af7;cursor:pointer}
+.hw-dropdown-item .hw-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+body.light .hw-dropdown-btn{background:#fff;border-color:#e8e4de;color:#3d2b1a}
+body.light .hw-dropdown-menu{background:#fff;border-color:#e8e4de;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+body.light .hw-dropdown-actions{border-bottom-color:#e8e4de}
+body.light .hw-dropdown-actions button{background:#f4f0ea;color:#9e8e7e}
+body.light .hw-dropdown-actions button:hover{background:#e8e4de;color:#5c4a3a}
+body.light .hw-dropdown-item{color:#6b5a4a}
+body.light .hw-dropdown-item:hover{background:#f4f0ea}
+body.light .hw-dropdown-item.selected{color:#2d1f10;background:#ede8e1}
 
 /* Toolbar flex tweaks for mode controls */
 #modelModeControls,#hardwareModeControls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 #hardwareModeControls.hidden{display:none!important}
+
+/* Hardware mode estimation note */
+.hw-estimate-note{margin-top:10px;padding:10px 14px;background:#1a1a24;border:1px solid #2a2a3a;border-radius:8px;font-size:.72rem;color:#888;line-height:1.5}
+.hw-estimate-note strong{color:#fb923c}
+.hw-estimate-note em{color:#a78bfa;font-style:normal}
+.hw-estimate-note.hidden{display:none!important}
+body.light .hw-estimate-note{background:#fdf6e3;border-color:#f0e0b0;color:#92610a}
+body.light .hw-estimate-note strong{color:#d97706}
+body.light .hw-estimate-note em{color:#7c3aed}
 
 /* ── MODALS ── */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
@@ -530,11 +557,19 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
 
       <!-- Hardware mode controls (hidden by default) -->
       <div id="hardwareModeControls" class="hidden">
-        <label>📊 Compare hardware:
-          <select id="hardwareSelect" multiple size="1" style="min-width:200px">
-          </select>
-        </label>
-        <span style="font-size:.7rem;color:#555;margin-left:8px">(Ctrl/Cmd+click to select multiple)</span>
+        <div class="hw-dropdown">
+          <button class="hw-dropdown-btn" id="hwDropdownBtn" onclick="toggleHwDropdown()">
+            <span id="hwDropdownLabel">Select hardware...</span>
+            <span class="hw-arrow">▼</span>
+          </button>
+          <div class="hw-dropdown-menu hidden" id="hwDropdownMenu">
+            <div class="hw-dropdown-actions">
+              <button onclick="selectAllHw()">All</button>
+              <button onclick="clearAllHw()">Clear</button>
+            </div>
+            <div class="hw-dropdown-list" id="hwDropdownList"></div>
+          </div>
+        </div>
       </div>
 
       <button class="share-btn" id="shareBtn" onclick="copyShareLink()">🔗 Share view</button>
@@ -555,6 +590,14 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
       <div class="chart-wrap">
         <canvas id="chart"></canvas>
         <div class="tt" id="tt"></div>
+      </div>
+      <!-- Hardware mode estimation note -->
+      <div id="hwEstimateNote" class="hw-estimate-note hidden">
+        <strong>⚠️ Estimated data:</strong> Solid dots at 7B and 70B are real benchmarks (where available). 
+        Other points are <em>interpolated</em> using log-linear scaling between known benchmarks, 
+        or <em>estimated</em> from memory bandwidth when only 7B data exists. 
+        Dashed lines past a hardware's max model size show theoretical "what if" performance. 
+        Real-world results will vary by model architecture, quantization, and context length.
       </div>
     </div>
 
