@@ -391,6 +391,22 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
 
       <div class="cl-entry">
         <div class="cl-date">Feb 14, 2026</div>
+        <div class="cl-title">Hardware-first comparison mode <span class="cl-tag feat">Feature</span></div>
+        <ul class="cl-items">
+          <li>New mode toggle: "Compare Models" (bubble) vs "Compare Hardware" (line chart)</li>
+          <li>Select multiple hardware configs via dropdown with checkboxes</li>
+          <li>Line chart shows estimated t/s across model sizes (1B → 400B, log scale)</li>
+          <li>Uses log-linear interpolation between 7B/70B benchmarks when available</li>
+          <li>Falls back to bandwidth-based estimation calibrated to 7B data</li>
+          <li>Dashed lines past VRAM limit show theoretical "what if" performance</li>
+          <li>Visible disclaimer explains estimation methodology</li>
+          <li>All/Clear buttons for quick hardware selection</li>
+          <li>URL encodes mode + selected hardware for sharing</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 14, 2026</div>
         <div class="cl-title">GPU-only cost toggle <span class="cl-tag feat">Feature</span></div>
         <ul class="cl-items">
           <li>New ☑️ checkbox in sidebar: "GPU-only cost (no platform)"</li>
