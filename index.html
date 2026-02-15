@@ -416,6 +416,72 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
     <div class="modal-body">
 
       <div class="cl-entry">
+        <div class="cl-date">Feb 15, 2026</div>
+        <div class="cl-title">Dark mode polish + legibility <span class="cl-tag ux">UX</span></div>
+        <ul class="cl-items">
+          <li>All dark mode headings, labels, table headers, stat card labels → teal <code>#2dd4bf</code></li>
+          <li>Chart canvas background matches sidebar (#111118)</li>
+          <li>Axis labels and titles now white/light grey — were near-invisible dark purple</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 15, 2026</div>
+        <div class="cl-title">Zoom + pan conflict fix <span class="cl-tag ux">UX</span></div>
+        <ul class="cl-items">
+          <li>Scroll wheel = zoom only. Click + drag = pan only. No more fighting</li>
+          <li>Root cause: stale v1 event names (onZoom/onPan) not firing in plugin v2</li>
+          <li>Fixed: onZoomComplete + onPanComplete (correct v2 API)</li>
+          <li>Mobile: touch pan locked behind explicit ✋ Pan toggle; pinch-zoom always free</li>
+          <li>Landscape mobile: sidebar + stat cards hidden, chart fills viewport</li>
+          <li>Axis min/max now round cleanly on zoom (afterBuildTicks, not afterDataLimits)</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 15, 2026</div>
+        <div class="cl-title">Compare Hardware lines fix <span class="cl-tag feat">Feature</span></div>
+        <ul class="cl-items">
+          <li>Lines were invisible — Chart.js v4 silently ignores chart.config.type mutations</li>
+          <li>Fixed: destroy + recreate chart with correct type on mode switch</li>
+          <li>Hardware mode now shows lines immediately with 4 defaults pre-selected</li>
+          <li>End-of-line labels, uniform dot sizes, OOM dashed lines, hover tooltips</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 15, 2026</div>
+        <div class="cl-title">Chart zoom + pan <span class="cl-tag feat">Feature</span></div>
+        <ul class="cl-items">
+          <li>Scroll wheel to zoom in/out on chart only (page doesn't scroll)</li>
+          <li>Click + drag to pan after zooming</li>
+          <li>Pinch to zoom on trackpad / touchscreen</li>
+          <li>Reset Zoom button appears in toolbar when zoomed</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 15, 2026</div>
+        <div class="cl-title">Bug fixes from user feedback <span class="cl-tag ux">UX</span></div>
+        <ul class="cl-items">
+          <li>Model sizes rounded — no more 7.1000000000005B</li>
+          <li>Data labels: opaque background pill replaces invisible text shadow</li>
+          <li>Compare Hardware: auto-selects RTX 3090/4090/M4 Max/DGX Spark on first load</li>
+          <li>Hardware chart: consistent 5px dots, colour-matched end labels, OOM lines filtered from legend</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
+        <div class="cl-date">Feb 15, 2026</div>
+        <div class="cl-title">New hardware: M3 Ultra 512GB <span class="cl-tag data">Data</span></div>
+        <ul class="cl-items">
+          <li>512GB unified memory, 890 GB/s bandwidth, ~115 t/s at 7B Q4</li>
+          <li>Runs DeepSeek R1/V3 671B Q4 at ~18–19 t/s — only single workstation that can</li>
+          <li>$14,999, 120W TDP, silent</li>
+        </ul>
+      </div>
+
+      <div class="cl-entry">
         <div class="cl-date">Feb 14, 2026</div>
         <div class="cl-title">Hardware-first comparison mode <span class="cl-tag feat">Feature</span></div>
         <ul class="cl-items">
