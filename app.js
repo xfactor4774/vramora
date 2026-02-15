@@ -240,20 +240,20 @@ function initChart() {
         tooltip: { enabled: false },
         zoom: {
           zoom: {
-            wheel: { enabled: true, speed: 0.08 },
-            pinch: { enabled: true },
+            wheel: { enabled: true, speed: 0.08 },  // scroll = zoom only
+            drag:  { enabled: false },               // no drag-to-zoom box
+            pinch: { enabled: true },                // pinch = zoom on mobile
             mode: 'xy',
-            onZoom: () => { document.getElementById('resetZoomBtn').style.display = ''; },
+            onZoomComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
           },
           pan: {
             enabled: true,
             mode: 'xy',
-            // On touch devices, only allow pan when pan-lock mode is active
-            // (prevents fighting with page scroll)
+            // mouse drag = pan; on touch only pan when pan-lock is active
             onPanStart: ({ event }) => {
               if (event.pointerType === 'touch' && !panModeActive) return false;
             },
-            onPan: () => { document.getElementById('resetZoomBtn').style.display = ''; },
+            onPanComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
           },
           limits: {
             x: { minRange: 100 },
@@ -640,15 +640,16 @@ function rebuildChart() {
           zoom: {
             zoom: {
               wheel: { enabled: true, speed: 0.08 },
+              drag:  { enabled: false },
               pinch: { enabled: true },
               mode: 'xy',
-              onZoom: () => { document.getElementById('resetZoomBtn').style.display = ''; },
+              onZoomComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
             },
             pan: {
               enabled: true,
               mode: 'xy',
               onPanStart: ({ event }) => { if (event.pointerType === 'touch' && !panModeActive) return false; },
-              onPan: () => { document.getElementById('resetZoomBtn').style.display = ''; },
+              onPanComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
             },
           },
         },
