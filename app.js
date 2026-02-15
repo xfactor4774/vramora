@@ -20,6 +20,7 @@ const DATA = [
   {id:'m4max128', name:'M4 Max Studio (128GB)',   cat:'apple', cost:7199, gpuCost:7199, vram:128,bw:546,  tps7:80,  tps70:40,  maxB:120,tdp:60,  notes:'128GB unified memory. Silent powerhouse. Handles 120B Q4.'},
   {id:'m2ultra',  name:'M2 Ultra Studio (192GB)', cat:'apple', cost:6999, gpuCost:6999, vram:192,bw:800,  tps7:94,  tps70:30,  maxB:180,tdp:90,  notes:'192GB unified. 70B prompt eval ~117 t/s. Excellent big-model machine.'},
   {id:'m3ultra',  name:'M3 Ultra Studio (256GB)', cat:'apple', cost:9999, gpuCost:9999, vram:256,bw:819,  tps7:105, tps70:71,  maxB:200,tdp:110, notes:'256GB unified. 70 t/s tg32 on 120B MXFP4. Top of Apple lineup.'},
+  {id:'m3ultra512',name:'M3 Ultra Studio (512GB)', cat:'apple', cost:14999,gpuCost:14999,vram:512,bw:890,  tps7:115, tps70:15,  maxB:400,tdp:120, notes:'512GB unified memory. 890 GB/s bandwidth. Runs DeepSeek R1 671B Q4 at ~18 t/s, Llama 70B Q4 ~12–18 t/s. DeepSeek V3 671B (MLX 4-bit) ~19 t/s. The only single workstation that can run 400B+ models. $14,999. Silent, 120W TDP.'},
   {id:'m4ultra',  name:'M4 Ultra Studio (est.)',  cat:'apple', cost:8999, gpuCost:8999, vram:192,bw:820,  tps7:120, tps70:55,  maxB:180,tdp:100, notes:'M4 Ultra estimated. Best t/s per watt of any platform.'},
   {id:'dgxspark', name:'NVIDIA DGX Spark',        cat:'system',cost:3999, gpuCost:3999, vram:128,bw:275,  tps7:60,  tps70:39,  maxB:200,tdp:120, notes:'GB10 Grace Blackwell, 128GB LPDDR5. $3,999. NVFP4 unlocks large-model perf. AI lab in a box.'},
 
