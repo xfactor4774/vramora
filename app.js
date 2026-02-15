@@ -30,10 +30,20 @@ const DATA = [
   {id:'mini8x',   name:'8× Mac Mini M4 Pro (192GB)',cat:'cluster',cost:10400,gpuCost:10400,vram:192,bw:1920, tps7:70,  tps70:20,  maxB:180,tdp:320, notes:'8× M4 Pro Minis (exo cluster). 192GB combined. Runs DeepSeek 671B at ~5 t/s, Llama 70B ~20 t/s. Thunderbolt inter-node bandwidth severely limits large-model speed. Great for model capacity, not raw speed.'},
 ];
 
+// Round a float model size cleanly: 7.1000000000005 → 7.1, 6.999999 → 7
+function roundModelSize(n) {
+  if (n == null) return n;
+  // Round to 1 decimal, then strip trailing .0
+  const r = Math.round(n * 10) / 10;
+  return r % 1 === 0 ? Math.round(r) : r;
+}
+
 DATA.forEach(d => {
   d.tpw = +(d.tps7 / d.tdp).toFixed(2);
   // value is recomputed dynamically via getEffectiveCost — init with system cost
   d.value = +(d.tps7 / d.cost * 1000).toFixed(1);
+  // Sanitise maxB in case of float drift
+  d.maxB = roundModelSize(d.maxB);
 });
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -197,13 +207,14 @@ function initChart() {
         legend: { display: false },
         tooltip: { enabled: false },
         datalabels: {
-          color: (ctx) => document.body.classList.contains('light') ? '#1a1a2e' : '#e2e2e2',
-          font: { size: 9, weight: '600', family: '-apple-system, BlinkMacSystemFont, sans-serif' },
+          color: (ctx) => document.body.classList.contains('light') ? '#1a1a2e' : '#ffffff',
+          font: { size: 9, weight: '700', family: '-apple-system, BlinkMacSystemFont, sans-serif' },
           align: 'top',
-          offset: 5,
+          offset: 6,
           clip: false,
-          textShadowColor: (ctx) => document.body.classList.contains('light') ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
-          textShadowBlur: 3,
+          backgroundColor: (ctx) => document.body.classList.contains('light') ? 'rgba(255,255,255,0.82)' : 'rgba(12,12,18,0.78)',
+          borderRadius: 3,
+          padding: { top: 2, bottom: 2, left: 4, right: 4 },
           formatter: val => {
             return val._raw.name
               .replace(' Mac Studio', '').replace('Mac Studio ', '')
@@ -229,6 +240,30 @@ function initChart() {
       onHover: (event, elements) => {
         const tt = document.getElementById('tt');
         if (!elements.length) { tt.style.display = 'none'; return; }
+
+        // Hardware compare mode: show model size + estimated t/s
+        if (compareMode === 'hardware') {
+          const el = elements[0];
+          const ds = chart.data.datasets[el.datasetIndex];
+          const pt = ds.data[el.dataIndex];
+          if (!pt) { tt.style.display = 'none'; return; }
+          const isOom = ds.label.includes('(OOM)');
+          tt.innerHTML = `
+            <div class="tt-name">${ds.label.replace(' (OOM)', '')}</div>
+            <div class="tt-r"><span>📏 Model Size</span><span>${roundModelSize(pt.x)}B params</span></div>
+            <div class="tt-r"><span>⚡ Est. t/s</span><span>${Math.round(pt.y)} t/s${isOom ? ' <span style="color:#ef4444;font-size:.65rem">(OOM — theoretical)</span>' : ''}</span></div>
+          `;
+          tt.style.display = 'block';
+          const wrap = document.querySelector('.chart-wrap').getBoundingClientRect();
+          let left = event.native.clientX - wrap.left + 14;
+          let top  = event.native.clientY - wrap.top  - 20;
+          if (left + 245 > wrap.width) left -= 255;
+          if (top < 0) top = 6;
+          tt.style.left = left + 'px';
+          tt.style.top  = top  + 'px';
+          return;
+        }
+
         const d = chart.data.datasets[elements[0].datasetIndex].data[elements[0].index]._raw;
         const col = pwHex(d.tdp);
         const pct = Math.round(Math.min(100, (d.tdp - 40) / 1160 * 100));
@@ -417,12 +452,21 @@ function setCompareMode(mode) {
   document.getElementById('modelModeControls').classList.toggle('hidden', mode !== 'model');
   document.getElementById('hardwareModeControls').classList.toggle('hidden', mode !== 'hardware');
   document.getElementById('hwEstimateNote').classList.toggle('hidden', mode !== 'hardware');
-  
+
   // Clear model banner when switching modes
   if (mode === 'hardware') {
     document.getElementById('modelBanner').classList.add('hidden');
+    // Auto-select defaults on first entry so chart isn't blank
+    const already = getSelectedHardwareIds();
+    if (!already.length) {
+      const defaults = ['rtx3090', 'rtx4090', 'm4max64', 'dgxspark'];
+      document.querySelectorAll('#hwDropdownList input').forEach(cb => {
+        if (defaults.includes(cb.value)) cb.checked = true;
+      });
+      updateHwDropdownLabel();
+    }
   }
-  
+
   rebuildChart();
   pushState();
 }
@@ -474,10 +518,25 @@ function buildHardwareDatasets() {
       borderWidth: 2.5,
       pointRadius: 5,
       pointHoverRadius: 7,
+      pointStyle: 'circle',
       tension: 0.3,
       fill: false,
+      datalabels: {
+        display: (ctx) => {
+          // Only label the last visible data point (max model size)
+          return ctx.dataIndex === ctx.dataset.data.length - 1;
+        },
+        color: color,
+        font: { size: 9, weight: '700' },
+        align: 'right',
+        offset: 6,
+        backgroundColor: (ctx) => document.body.classList.contains('light') ? 'rgba(255,255,255,0.85)' : 'rgba(12,12,18,0.80)',
+        borderRadius: 3,
+        padding: { top: 2, bottom: 2, left: 4, right: 4 },
+        formatter: (val, ctx) => ctx.dataset.label.replace(' (est.)', ''),
+      },
     }];
-    
+
     // Add OOM dashed line if applicable
     if (oomPoints.length > 0 && dataPoints.length > 0) {
       // Connect last valid point to OOM line
@@ -488,10 +547,12 @@ function buildHardwareDatasets() {
         borderColor: color + '66',
         borderWidth: 1.5,
         borderDash: [5, 5],
-        pointRadius: 3,
-        pointStyle: 'crossRot',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointStyle: 'circle',
         tension: 0.3,
         fill: false,
+        datalabels: { display: false },
       });
     }
     
@@ -511,8 +572,8 @@ function rebuildChart() {
     chart.options.scales.x.ticks.callback = v => v + 'B';
     chart.options.scales.y.title.text = 'Estimated Tokens/sec (Q4)';
     chart.options.scales.y.ticks.callback = v => v + ' t/s';
-    chart.options.plugins.datalabels.display = false;
-    chart.options.plugins.legend = { display: true, position: 'top', labels: { color: document.body.classList.contains('light') ? '#3d2b1a' : '#bbb', font: { size: 11 } } };
+    chart.options.plugins.datalabels.display = true; // per-dataset display handles actual visibility
+    chart.options.plugins.legend = { display: true, position: 'top', labels: { color: document.body.classList.contains('light') ? '#3d2b1a' : '#bbb', font: { size: 11 }, filter: item => !item.text.includes('(OOM)') } };
   } else {
     // Restore bubble chart for model mode
     chart.config.type = 'bubble';
