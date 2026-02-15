@@ -45,6 +45,37 @@ let sortCol     = 'cost';
 let sortAsc     = true;
 let currentView = 'chart';
 let gpuOnlyMode = false; // toggle: GPU-only cost vs full system cost
+let compareMode = 'model'; // 'model' (current) or 'hardware' (new mode)
+let selectedHardware = []; // array of hardware IDs for hardware mode
+
+// Model sizes for hardware comparison mode (log-ish scale)
+const MODEL_SIZES = [1, 3, 7, 13, 30, 70, 120, 200, 400];
+
+// Estimate t/s for a given hardware config and model size
+// Formula: t/s ≈ (bandwidth_GB_s / (params_B × bytes_per_param)) × efficiency_factor
+// Q4 ≈ 0.5 bytes/param, real-world efficiency ~45% of theoretical
+function getEstimatedTps(hw, paramB) {
+  // Check VRAM constraint: Q4 needs ~0.6 GB per billion params (with overhead)
+  const vramNeeded = paramB * 0.6;
+  if (vramNeeded > hw.vram) return null; // OOM
+  
+  // Use actual benchmark if we have it
+  if (paramB === 7 && hw.tps7) return hw.tps7;
+  if (paramB === 70 && hw.tps70) return hw.tps70;
+  
+  // Estimate from bandwidth
+  const bytesPerParam = 0.5; // Q4
+  const theoretical = hw.bw / (paramB * bytesPerParam);
+  
+  // Calibrate efficiency based on actual 7B benchmark if available
+  let efficiency = 0.45; // default
+  if (hw.tps7) {
+    const theoretical7B = hw.bw / (7 * bytesPerParam);
+    efficiency = hw.tps7 / theoretical7B;
+  }
+  
+  return Math.round(theoretical * efficiency);
+}
 
 // Returns the cost to use for X-axis / value calculations
 function getEffectiveCost(d) {
@@ -299,9 +330,140 @@ function clearModel() {
   refresh();
 }
 
+// ─── HARDWARE MODE ───────────────────────────────────────────────────────────
+function populateHardwareSelect() {
+  const sel = document.getElementById('hardwareSelect');
+  DATA.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.textContent = `${d.name} (${d.vram}GB)`;
+    opt.style.color = CAT_COL[d.cat];
+    sel.appendChild(opt);
+  });
+}
+
+function setCompareMode(mode) {
+  compareMode = mode;
+  document.getElementById('btn-mode-model').classList.toggle('active', mode === 'model');
+  document.getElementById('btn-mode-hardware').classList.toggle('active', mode === 'hardware');
+  document.getElementById('modelModeControls').classList.toggle('hidden', mode !== 'model');
+  document.getElementById('hardwareModeControls').classList.toggle('hidden', mode !== 'hardware');
+  
+  // Clear model banner when switching modes
+  if (mode === 'hardware') {
+    document.getElementById('modelBanner').classList.add('hidden');
+  }
+  
+  rebuildChart();
+  pushState();
+}
+
+function getSelectedHardwareIds() {
+  const sel = document.getElementById('hardwareSelect');
+  return [...sel.selectedOptions].map(o => o.value);
+}
+
+function buildHardwareDatasets() {
+  const hwIds = getSelectedHardwareIds();
+  if (!hwIds.length) return [];
+  
+  // Color palette for multiple hardware lines
+  const colors = ['#5eead4', '#a78bfa', '#fb923c', '#facc15', '#f472b6', '#60a5fa', '#4ade80', '#fbbf24'];
+  
+  return hwIds.map((id, idx) => {
+    const hw = DATA.find(d => d.id === id);
+    if (!hw) return null;
+    
+    const color = colors[idx % colors.length];
+    const dataPoints = [];
+    const oomPoints = []; // for dashed OOM line
+    
+    let hitOom = false;
+    MODEL_SIZES.forEach(paramB => {
+      const tps = getEstimatedTps(hw, paramB);
+      if (tps !== null && !hitOom) {
+        dataPoints.push({ x: paramB, y: tps });
+      } else {
+        hitOom = true;
+        // Estimate what it *would* be if we had infinite VRAM (dashed line)
+        const bytesPerParam = 0.5;
+        const theoretical = hw.bw / (paramB * bytesPerParam);
+        let efficiency = 0.45;
+        if (hw.tps7) {
+          const theoretical7B = hw.bw / (7 * bytesPerParam);
+          efficiency = hw.tps7 / theoretical7B;
+        }
+        oomPoints.push({ x: paramB, y: Math.round(theoretical * efficiency) });
+      }
+    });
+    
+    const datasets = [{
+      label: hw.name,
+      data: dataPoints,
+      borderColor: color,
+      backgroundColor: color + '33',
+      borderWidth: 2.5,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      tension: 0.3,
+      fill: false,
+    }];
+    
+    // Add OOM dashed line if applicable
+    if (oomPoints.length > 0 && dataPoints.length > 0) {
+      // Connect last valid point to OOM line
+      const lastValid = dataPoints[dataPoints.length - 1];
+      datasets.push({
+        label: hw.name + ' (OOM)',
+        data: [lastValid, ...oomPoints],
+        borderColor: color + '66',
+        borderWidth: 1.5,
+        borderDash: [5, 5],
+        pointRadius: 3,
+        pointStyle: 'crossRot',
+        tension: 0.3,
+        fill: false,
+      });
+    }
+    
+    return datasets;
+  }).filter(Boolean).flat();
+}
+
+function rebuildChart() {
+  if (!chart) return;
+  
+  if (compareMode === 'hardware') {
+    // Switch to line chart for hardware mode
+    chart.config.type = 'line';
+    chart.data.datasets = buildHardwareDatasets();
+    chart.options.scales.x.type = 'logarithmic';
+    chart.options.scales.x.title.text = 'Model Size (Billion Parameters)';
+    chart.options.scales.x.ticks.callback = v => v + 'B';
+    chart.options.scales.y.title.text = 'Estimated Tokens/sec (Q4)';
+    chart.options.scales.y.ticks.callback = v => v + ' t/s';
+    chart.options.plugins.datalabels.display = false;
+    chart.options.plugins.legend = { display: true, position: 'top', labels: { color: document.body.classList.contains('light') ? '#3d2b1a' : '#bbb', font: { size: 11 } } };
+  } else {
+    // Restore bubble chart for model mode
+    chart.config.type = 'bubble';
+    chart.data.datasets = buildDatasets();
+    chart.options.scales.x.type = 'linear';
+    chart.options.scales.x.title.text = xAxisLabel();
+    chart.options.scales.x.ticks.callback = v => '$' + v.toLocaleString();
+    chart.options.scales.y.title.text = yAxisLabel();
+    chart.options.scales.y.ticks.callback = yTickFmt;
+    chart.options.plugins.datalabels.display = true;
+    chart.options.plugins.legend = { display: false };
+  }
+  
+  chart.update();
+}
+
 // ─── URL STATE (shareable links) ─────────────────────────────────────────────
 function encodeState() {
   const params = new URLSearchParams();
+  params.set('mode', compareMode);
   params.set('y', yMode);
   params.set('hl', hlMode);
   params.set('view', currentView);
@@ -309,6 +471,10 @@ function encodeState() {
   params.set('vram', [...activeVram].join(','));
   if (selectedModel) params.set('model', selectedModel);
   if (gpuOnlyMode)   params.set('gpuonly', '1');
+  if (compareMode === 'hardware') {
+    const hwIds = getSelectedHardwareIds();
+    if (hwIds.length) params.set('hw', hwIds.join(','));
+  }
   return '#' + params.toString();
 }
 
@@ -334,6 +500,20 @@ function decodeState() {
   if (params.get('gpuonly') === '1') {
     gpuOnlyMode = true;
     document.getElementById('costMode').checked = true;
+  }
+  if (params.get('mode') === 'hardware') {
+    compareMode = 'hardware';
+    document.getElementById('btn-mode-model').classList.remove('active');
+    document.getElementById('btn-mode-hardware').classList.add('active');
+    document.getElementById('modelModeControls').classList.add('hidden');
+    document.getElementById('hardwareModeControls').classList.remove('hidden');
+    if (params.get('hw')) {
+      const hwIds = params.get('hw').split(',');
+      const sel = document.getElementById('hardwareSelect');
+      [...sel.options].forEach(opt => {
+        opt.selected = hwIds.includes(opt.value);
+      });
+    }
   }
   if (params.get('view')) setView(params.get('view'));
 }
@@ -510,6 +690,11 @@ document.getElementById('modelSelect').addEventListener('change', e => {
   refresh();
 });
 
+document.getElementById('hardwareSelect').addEventListener('change', () => {
+  rebuildChart();
+  pushState();
+});
+
 document.querySelectorAll('thead th[data-col]').forEach(th => {
   th.addEventListener('click', () => {
     const col = th.dataset.col;
@@ -591,8 +776,13 @@ function applyStoredCostMode() {
 
 Chart.register(ChartDataLabels);
 populateModelSelect();
+populateHardwareSelect();
 applyStoredCostMode();
 decodeState();
 initChart();
+// If hardware mode was set via URL, rebuild chart after init
+if (compareMode === 'hardware') {
+  rebuildChart();
+}
 updateStats();
 applyStoredTheme();
