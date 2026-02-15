@@ -224,6 +224,7 @@ const chartBgPlugin = {
 };
 
 function initChart() {
+  if (chart) { chart.destroy(); chart = null; }
   Chart.register(ChartDataLabels);
   const ctx = document.getElementById('chart').getContext('2d');
   chart = new Chart(ctx, {
@@ -309,30 +310,6 @@ function initChart() {
       onHover: (event, elements) => {
         const tt = document.getElementById('tt');
         if (!elements.length) { tt.style.display = 'none'; return; }
-
-        // Hardware compare mode: show model size + estimated t/s
-        if (compareMode === 'hardware') {
-          const el = elements[0];
-          const ds = chart.data.datasets[el.datasetIndex];
-          const pt = ds.data[el.dataIndex];
-          if (!pt) { tt.style.display = 'none'; return; }
-          const isOom = ds.label.includes('(OOM)');
-          tt.innerHTML = `
-            <div class="tt-name">${ds.label.replace(' (OOM)', '')}</div>
-            <div class="tt-r"><span>📏 Model Size</span><span>${roundModelSize(pt.x)}B params</span></div>
-            <div class="tt-r"><span>⚡ Est. t/s</span><span>${Math.round(pt.y)} t/s${isOom ? ' <span style="color:#ef4444;font-size:.65rem">(OOM — theoretical)</span>' : ''}</span></div>
-          `;
-          tt.style.display = 'block';
-          const wrap = document.querySelector('.chart-wrap').getBoundingClientRect();
-          let left = event.native.clientX - wrap.left + 14;
-          let top  = event.native.clientY - wrap.top  - 20;
-          if (left + 245 > wrap.width) left -= 255;
-          if (top < 0) top = 6;
-          tt.style.left = left + 'px';
-          tt.style.top  = top  + 'px';
-          return;
-        }
-
         const d = chart.data.datasets[elements[0].datasetIndex].data[elements[0].index]._raw;
         const col = pwHex(d.tdp);
         const pct = Math.round(Math.min(100, (d.tdp - 40) / 1160 * 100));
@@ -632,33 +609,107 @@ function buildHardwareDatasets() {
 }
 
 function rebuildChart() {
-  if (!chart) return;
-  
+  // Chart.js v4 does not support mutating chart.config.type after creation.
+  // Destroy and recreate with the correct type whenever the mode changes.
+  if (chart) { chart.destroy(); chart = null; }
+
+  const light = document.body.classList.contains('light');
+  const ctx = document.getElementById('chart').getContext('2d');
+
   if (compareMode === 'hardware') {
-    // Switch to line chart for hardware mode
-    chart.config.type = 'line';
-    chart.data.datasets = buildHardwareDatasets();
-    chart.options.scales.x.type = 'logarithmic';
-    chart.options.scales.x.title.text = 'Model Size (Billion Parameters)';
-    chart.options.scales.x.ticks.callback = v => v + 'B';
-    chart.options.scales.y.title.text = 'Estimated Tokens/sec (Q4)';
-    chart.options.scales.y.ticks.callback = v => v + ' t/s';
-    chart.options.plugins.datalabels.display = true; // per-dataset display handles actual visibility
-    chart.options.plugins.legend = { display: true, position: 'top', labels: { color: document.body.classList.contains('light') ? '#3d2b1a' : '#bbb', font: { size: 11 }, filter: item => !item.text.includes('(OOM)') } };
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: { datasets: buildHardwareDatasets() },
+      plugins: [chartBgPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 200 },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              color: light ? '#3d2b1a' : '#bbb',
+              font: { size: 11 },
+              filter: item => !item.text.includes('(OOM)'),
+            },
+          },
+          tooltip: { enabled: false },
+          datalabels: { display: true },
+          zoom: {
+            zoom: {
+              wheel: { enabled: true, speed: 0.08 },
+              pinch: { enabled: true },
+              mode: 'xy',
+              onZoom: () => { document.getElementById('resetZoomBtn').style.display = ''; },
+            },
+            pan: {
+              enabled: true,
+              mode: 'xy',
+              onPanStart: ({ event }) => { if (event.pointerType === 'touch' && !panModeActive) return false; },
+              onPan: () => { document.getElementById('resetZoomBtn').style.display = ''; },
+            },
+          },
+        },
+        scales: {
+          x: {
+            type: 'logarithmic',
+            grid: { color: light ? '#e8e4de' : '#1e1e2e' },
+            border: { color: light ? '#e8e4de' : '#2a2a3a' },
+            title: { display: true, text: 'Model Size (Billion Parameters)', color: light ? '#9e8e7e' : '#888', font: { size: 10 } },
+            ticks: {
+              color: light ? '#b0a090' : '#aaa',
+              maxTicksLimit: 8,
+              callback: v => {
+                const clean = [1, 3, 7, 13, 30, 70, 120, 200, 400];
+                return clean.includes(v) ? v + 'B' : '';
+              },
+            },
+          },
+          y: {
+            grid: { color: light ? '#e8e4de' : '#1e1e2e' },
+            border: { color: light ? '#e8e4de' : '#2a2a3a' },
+            title: { display: true, text: 'Estimated Tokens/sec (Q4)', color: light ? '#9e8e7e' : '#888', font: { size: 10 } },
+            ticks: { color: light ? '#b0a090' : '#aaa', maxTicksLimit: 8, callback: v => v + ' t/s' },
+            afterBuildTicks: scale => {
+              if (!scale.ticks.length) return;
+              const range = scale.max - scale.min || 1;
+              const mag = Math.pow(10, Math.floor(Math.log10(range)) - 1);
+              scale.min = Math.max(0, Math.floor(scale.min / mag) * mag);
+              scale.max = Math.ceil(scale.max / mag) * mag;
+            },
+          },
+        },
+        onHover: (event, elements) => {
+          const tt = document.getElementById('tt');
+          if (!elements.length) { tt.style.display = 'none'; return; }
+          const el = elements[0];
+          const ds = chart.data.datasets[el.datasetIndex];
+          const pt = ds.data[el.dataIndex];
+          if (!pt) { tt.style.display = 'none'; return; }
+          const isOom = ds.label.includes('(OOM)');
+          tt.innerHTML = `
+            <div class="tt-name">${ds.label.replace(' (OOM)', '')}</div>
+            <div class="tt-r"><span>📏 Model Size</span><span>${roundModelSize(pt.x)}B params</span></div>
+            <div class="tt-r"><span>⚡ Est. t/s</span><span>${Math.round(pt.y)} t/s${isOom ? ' <span style="color:#ef4444;font-size:.65rem">(OOM)</span>' : ''}</span></div>
+          `;
+          tt.style.display = 'block';
+          const wrap = document.querySelector('.chart-wrap').getBoundingClientRect();
+          let left = event.native.clientX - wrap.left + 14;
+          let top  = event.native.clientY - wrap.top  - 20;
+          if (left + 245 > wrap.width) left -= 255;
+          if (top < 0) top = 6;
+          tt.style.left = left + 'px';
+          tt.style.top  = top  + 'px';
+        },
+      },
+    });
   } else {
-    // Restore bubble chart for model mode
-    chart.config.type = 'bubble';
-    chart.data.datasets = buildDatasets();
-    chart.options.scales.x.type = 'linear';
-    chart.options.scales.x.title.text = xAxisLabel();
-    chart.options.scales.x.ticks.callback = v => '$' + v.toLocaleString();
-    chart.options.scales.y.title.text = yAxisLabel();
-    chart.options.scales.y.ticks.callback = yTickFmt;
-    chart.options.plugins.datalabels.display = true;
-    chart.options.plugins.legend = { display: false };
+    initChart(); // recreate bubble chart (initChart now destroy-first)
   }
-  
-  chart.update();
+
+  document.getElementById('resetZoomBtn').style.display = 'none';
 }
 
 // ─── URL STATE (shareable links) ─────────────────────────────────────────────
