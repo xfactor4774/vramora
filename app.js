@@ -58,6 +58,7 @@ let currentView = 'chart';
 let gpuOnlyMode = false; // toggle: GPU-only cost vs full system cost
 let compareMode = 'model'; // 'model' (current) or 'hardware' (new mode)
 let selectedHardware = []; // array of hardware IDs for hardware mode
+let panModeActive = false; // touch pan lock — off by default so scroll works normally
 
 // Model sizes for hardware comparison mode (log-ish scale)
 const MODEL_SIZES = [1, 3, 7, 13, 30, 70, 120, 200, 400];
@@ -199,6 +200,15 @@ function resetZoom() {
   document.getElementById('resetZoomBtn').style.display = 'none';
 }
 
+function togglePanMode() {
+  panModeActive = !panModeActive;
+  const btn = document.getElementById('panModeBtn');
+  btn.textContent = panModeActive ? '✋ Pan: ON' : '✋ Pan';
+  btn.style.background = panModeActive ? '#7c6af7' : '';
+  btn.style.color = panModeActive ? '#fff' : '';
+  btn.style.borderColor = panModeActive ? '#7c6af7' : '';
+}
+
 // Inline plugin: fills chart canvas with a background color
 const chartBgPlugin = {
   id: 'chartBg',
@@ -237,6 +247,11 @@ function initChart() {
           pan: {
             enabled: true,
             mode: 'xy',
+            // On touch devices, only allow pan when pan-lock mode is active
+            // (prevents fighting with page scroll)
+            onPanStart: ({ event }) => {
+              if (event.pointerType === 'touch' && !panModeActive) return false;
+            },
             onPan: () => { document.getElementById('resetZoomBtn').style.display = ''; },
           },
           limits: {
@@ -268,8 +283,9 @@ function initChart() {
           grid: { color: '#1e1e2e' },
           border: { color: '#2a2a3a' },
           bounds: 'ticks',
-          afterDataLimits: scale => {
-            const range = scale.max - scale.min;
+          afterBuildTicks: scale => {
+            if (!scale.ticks.length) return;
+            const range = scale.max - scale.min || 1;
             const mag = Math.pow(10, Math.floor(Math.log10(range)) - 1);
             scale.min = Math.floor(scale.min / mag) * mag;
             scale.max = Math.ceil(scale.max / mag) * mag;
@@ -281,7 +297,8 @@ function initChart() {
           grid: { color: '#1e1e2e' },
           border: { color: '#2a2a3a' },
           bounds: 'ticks',
-          afterDataLimits: scale => {
+          afterBuildTicks: scale => {
+            if (!scale.ticks.length) return;
             const range = scale.max - scale.min || 1;
             const mag = Math.pow(10, Math.floor(Math.log10(range)) - 1);
             scale.min = Math.max(0, Math.floor(scale.min / mag) * mag);

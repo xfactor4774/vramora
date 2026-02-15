@@ -320,6 +320,30 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
   .stat-row{grid-template-columns:1fr}
   .stat-row .sc:last-child{grid-column:span 1}
 }
+
+/* Pan button: only show on touch devices */
+.pan-btn { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .pan-btn { display: inline-flex; }
+}
+
+/* ── LANDSCAPE MOBILE: maximize chart, hide sidebar + stat cards ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  header { padding: 4px 14px; }
+  .tagline { display: none; }
+  .layout { flex-direction: row; height: calc(100vh - 36px); }
+  .sidebar { display: none !important; }
+  .main { display: flex; flex-direction: column; height: 100%; }
+  .toolbar { padding: 4px 10px; gap: 6px; min-height: 0; flex-shrink: 0; }
+  .toolbar label { display: none; }
+  .toolbar select { padding: 2px 6px; font-size: .68rem; }
+  .model-banner { padding: 3px 10px; font-size: .68rem; }
+  .chart-area { flex: 1 !important; padding: 4px 8px; min-height: 0; }
+  .chart-wrap { height: 100% !important; min-height: 0; }
+  canvas#chart { height: 100% !important; }
+  .stat-row { display: none !important; }
+  .hw-estimate-note { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -599,6 +623,7 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
       </div>
 
       <button class="share-btn" id="resetZoomBtn" onclick="resetZoom()" style="display:none" title="Reset zoom">⟳ Reset zoom</button>
+      <button class="share-btn pan-btn" id="panModeBtn" onclick="togglePanMode()" title="Toggle touch pan mode">✋ Pan</button>
       <button class="share-btn" id="shareBtn" onclick="copyShareLink()">🔗 Share view</button>
       <div class="vt">
         <button class="vb active" id="btn-chart" onclick="setView('chart')">📈 Chart</button>
