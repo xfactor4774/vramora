@@ -264,15 +264,21 @@ function initChart() {
           pan: {
             enabled: true,
             mode: 'xy',
-            // pan enabled for mouse drag; touch requires pan-lock toggle
+            threshold: 10,
+            // Block single-finger touch pan (interferes with scroll), allow mouse drag
+            // Multi-touch (pinch) is handled by zoom, not pan
             onPanStart: ({ event }) => {
+              // Allow mouse drag always
+              if (event.pointerType === 'mouse') return true;
+              // Touch: only allow if pan mode is active
               if (event.pointerType === 'touch' && !panModeActive) return false;
+              return true;
             },
             onPanComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
           },
           limits: {
-            x: { min: 0, max: 200000, minRange: 100 },
-            y: { min: 0, minRange: 1 },
+            x: { min: 0, max: 20000, minRange: 50 },
+            y: { min: 0, max: 600, minRange: 2 },
           },
         },
         datalabels: {
@@ -663,12 +669,17 @@ function rebuildChart() {
             pan: {
               enabled: true,
               mode: 'xy',
-              onPanStart: ({ event }) => { if (event.pointerType === 'touch' && !panModeActive) return false; },
+              threshold: 10,
+              onPanStart: ({ event }) => {
+                if (event.pointerType === 'mouse') return true;
+                if (event.pointerType === 'touch' && !panModeActive) return false;
+                return true;
+              },
               onPanComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
             },
             limits: {
-              x: { min: 0.5, minRange: 1 },
-              y: { min: 0, minRange: 1 },
+              x: { min: 0.5, max: 500, minRange: 1 },
+              y: { min: 0, max: 300, minRange: 2 },
             },
           },
         },
