@@ -698,7 +698,9 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
         </div>
       </div>
 
-      <button class="share-btn" id="resetZoomBtn" onclick="resetZoom()" style="display:none" title="Reset zoom">⟳ Reset zoom</button>
+      <button class="share-btn" onclick="zoomIn()" title="Zoom in">＋</button>
+      <button class="share-btn" onclick="zoomOut()" title="Zoom out">－</button>
+      <button class="share-btn" id="resetZoomBtn" onclick="resetZoom()" style="display:none" title="Reset zoom">⟳ Reset</button>
       <button class="share-btn pan-btn" id="panModeBtn" onclick="togglePanMode()" title="Toggle touch pan mode">✋ Pan</button>
       <button class="share-btn" id="shareBtn" onclick="copyShareLink()">🔗 Share view</button>
       <div class="vt">

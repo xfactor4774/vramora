@@ -201,6 +201,20 @@ function resetZoom() {
   document.getElementById('resetZoomBtn').style.display = 'none';
 }
 
+function zoomIn() {
+  if (chart) {
+    chart.zoom(1.3);
+    document.getElementById('resetZoomBtn').style.display = '';
+  }
+}
+
+function zoomOut() {
+  if (chart) {
+    chart.zoom(0.7);
+    document.getElementById('resetZoomBtn').style.display = '';
+  }
+}
+
 function togglePanMode() {
   panModeActive = !panModeActive;
   const btn = document.getElementById('panModeBtn');
@@ -241,16 +255,16 @@ function initChart() {
         tooltip: { enabled: false },
         zoom: {
           zoom: {
-            wheel: { enabled: true, speed: 0.08 },  // scroll = zoom only
+            wheel: { enabled: false },               // disabled — use buttons instead
             drag:  { enabled: false },               // no drag-to-zoom box
-            pinch: { enabled: true },                // pinch = zoom on mobile
+            pinch: { enabled: true },                // pinch = zoom on trackpad/mobile
             mode: 'xy',
             onZoomComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
           },
           pan: {
             enabled: true,
             mode: 'xy',
-            // mouse drag = pan; on touch only pan when pan-lock is active
+            // pan enabled for mouse drag; touch requires pan-lock toggle
             onPanStart: ({ event }) => {
               if (event.pointerType === 'touch' && !panModeActive) return false;
             },
@@ -640,7 +654,7 @@ function rebuildChart() {
           datalabels: { display: true },
           zoom: {
             zoom: {
-              wheel: { enabled: true, speed: 0.08 },
+              wheel: { enabled: false },             // disabled — use buttons instead
               drag:  { enabled: false },
               pinch: { enabled: true },
               mode: 'xy',
