@@ -31,7 +31,7 @@ VRAMora helps you answer the two most common local AI hardware questions:
 | NVIDIA single GPU | RTX 3060, 3080 Ti, 4080, 4000 Ada, 3090, 4090, 5090, A6000 |
 | NVIDIA multi-GPU | 2× 3090, 2× 4090, 3× 3090 |
 | Apple Silicon | M3 Max, M4 Max (64/128GB), M2 Ultra, M3 Ultra, M4 Ultra Mac Studios |
-| Packaged systems | NVIDIA DGX Spark, Dell Pro Max GB10 |
+| Packaged systems | NVIDIA DGX Spark, Dell Pro Max GB10, Ryzen AI Max+ 395 (Strix Halo) |
 | Mac Mini clusters | 4× and 8× M4 Pro via Thunderbolt (exo) |
 
 ## Data sources
