@@ -256,8 +256,8 @@ function initChart() {
             onPanComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
           },
           limits: {
-            x: { minRange: 100 },
-            y: { minRange: 1 },
+            x: { min: 0, max: 200000, minRange: 100 },
+            y: { min: 0, minRange: 1 },
           },
         },
         datalabels: {
@@ -288,8 +288,8 @@ function initChart() {
             if (!scale.ticks.length) return;
             const range = scale.max - scale.min || 1;
             const mag = Math.pow(10, Math.floor(Math.log10(range)) - 1);
-            scale.min = Math.floor(scale.min / mag) * mag;
-            scale.max = Math.ceil(scale.max / mag) * mag;
+            scale.min = Math.max(0, Math.floor(scale.min / mag) * mag);
+            scale.max = Math.min(200000, Math.ceil(scale.max / mag) * mag);
           },
         },
         y: {
@@ -303,7 +303,7 @@ function initChart() {
             const range = scale.max - scale.min || 1;
             const mag = Math.pow(10, Math.floor(Math.log10(range)) - 1);
             scale.min = Math.max(0, Math.floor(scale.min / mag) * mag);
-            scale.max = Math.ceil(scale.max / mag) * mag;
+            scale.max = Math.min(2000, Math.ceil(scale.max / mag) * mag);
           },
         },
       },
@@ -651,6 +651,10 @@ function rebuildChart() {
               onPanStart: ({ event }) => { if (event.pointerType === 'touch' && !panModeActive) return false; },
               onPanComplete: () => { document.getElementById('resetZoomBtn').style.display = ''; },
             },
+            limits: {
+              x: { min: 0.5, minRange: 1 },
+              y: { min: 0, minRange: 1 },
+            },
           },
         },
         scales: {
@@ -678,7 +682,7 @@ function rebuildChart() {
               const range = scale.max - scale.min || 1;
               const mag = Math.pow(10, Math.floor(Math.log10(range)) - 1);
               scale.min = Math.max(0, Math.floor(scale.min / mag) * mag);
-              scale.max = Math.ceil(scale.max / mag) * mag;
+              scale.max = Math.min(2000, Math.ceil(scale.max / mag) * mag);
             },
           },
         },
