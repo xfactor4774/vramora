@@ -102,7 +102,7 @@ body.light .sc .sb2{color:#b0a090}
 .main{flex:1;display:flex;flex-direction:column;min-width:0}
 .toolbar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid #1a1a28;flex-wrap:wrap}
 .toolbar label{font-size:.73rem;color:#555;display:flex;align-items:center;gap:6px}
-.toolbar select{background:#18181f;border:1px solid #2a2a3a;color:#bbb;padding:4px 10px;border-radius:6px;font-size:.74rem;cursor:pointer}
+.toolbar select{background:#18181f;border:1px solid #2a2a3a;color:#e0e0e0;padding:4px 10px;border-radius:6px;font-size:.74rem;cursor:pointer}
 .toolbar select:hover{border-color:#7c6af7}
 .vt{margin-left:auto;display:flex;background:#18181f;border:1px solid #2a2a3a;border-radius:7px;overflow:hidden}
 .vb{padding:5px 14px;font-size:.74rem;cursor:pointer;color:#555;border:none;background:transparent;transition:all .15s}
@@ -160,7 +160,7 @@ tbody tr:hover td{background:#13131c}
 
 /* Hardware mode dropdown */
 .hw-dropdown{position:relative;display:inline-block}
-.hw-dropdown-btn{background:#18181f;border:1px solid #2a2a3a;color:#bbb;padding:6px 12px;border-radius:6px;font-size:.74rem;cursor:pointer;min-width:220px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hw-dropdown-btn{background:#18181f;border:1px solid #2a2a3a;color:#e0e0e0;padding:6px 12px;border-radius:6px;font-size:.74rem;cursor:pointer;min-width:220px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .hw-dropdown-btn:hover{border-color:#7c6af7}
 .hw-arrow{font-size:.6rem;opacity:.6}
 .hw-dropdown-menu{position:absolute;top:100%;left:0;margin-top:4px;background:#18181f;border:1px solid #2a2a3a;border-radius:8px;min-width:260px;max-height:320px;overflow-y:auto;z-index:150;box-shadow:0 8px 24px rgba(0,0,0,.5)}
@@ -169,7 +169,7 @@ tbody tr:hover td{background:#13131c}
 .hw-dropdown-actions button{background:#2a2a3a;border:none;color:#888;padding:4px 10px;border-radius:4px;font-size:.68rem;cursor:pointer}
 .hw-dropdown-actions button:hover{background:#3a3a4a;color:#ccc}
 .hw-dropdown-list{padding:6px 0}
-.hw-dropdown-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:.75rem;color:#999;transition:background .1s}
+.hw-dropdown-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:.75rem;color:#ccc;transition:background .1s}
 .hw-dropdown-item:hover{background:#1e1e28}
 .hw-dropdown-item.selected{color:#fff;background:#1a1a24}
 .hw-dropdown-item input{width:14px;height:14px;accent-color:#7c6af7;cursor:pointer}
@@ -611,6 +611,7 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
     <div class="sb fl">
       <h3>Hardware Type</h3>
       <label><input type="checkbox" class="cf" data-cat="nvidia" checked><span class="dot" style="background:#5eead4"></span>NVIDIA GPU rig</label>
+      <label><input type="checkbox" class="cf" data-cat="amd" checked><span class="dot" style="background:#ef4444"></span>AMD GPU</label>
       <label><input type="checkbox" class="cf" data-cat="apple" checked><span class="dot" style="background:#a78bfa"></span>Apple Silicon</label>
       <label><input type="checkbox" class="cf" data-cat="system" checked><span class="dot" style="background:#fb923c"></span>Packaged System</label>
       <label><input type="checkbox" class="cf" data-cat="cluster" checked><span class="dot" style="background:#facc15"></span>Mac Mini Cluster</label>

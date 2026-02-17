@@ -1,6 +1,6 @@
 // ─── DATA ────────────────────────────────────────────────────────────────────
-const CAT_COL = {nvidia:'#5eead4', apple:'#a78bfa', system:'#fb923c', cluster:'#facc15'};
-const CAT_LBL = {nvidia:'NVIDIA GPU Rig', apple:'Apple Silicon', system:'Packaged System', cluster:'Mac Mini Cluster'};
+const CAT_COL = {nvidia:'#5eead4', apple:'#a78bfa', system:'#fb923c', cluster:'#facc15', amd:'#ef4444'};
+const CAT_LBL = {nvidia:'NVIDIA GPU Rig', apple:'Apple Silicon', system:'Packaged System', cluster:'Mac Mini Cluster', amd:'AMD GPU'};
 
 const DATA = [
   // gpuCost = GPU card(s) only; cost = full system (GPU + platform)
@@ -27,7 +27,24 @@ const DATA = [
   // ── NEW ──
   {id:'rtx5090',  name:'RTX 5090',                cat:'nvidia',cost:4700, gpuCost:4000, vram:32, bw:1792, tps7:186, tps70:null,maxB:30, tdp:575, notes:'Blackwell GB202, 32GB GDDR7, 1792 GB/s bandwidth. GPU ~$3,999–4,000 street + platform ~$700. Blazing fast on 7B–32B. Still 32GB cap — no 70B without multi-GPU.'},
   {id:'dellgb10', name:'Dell Pro Max (GB10)',      cat:'system',cost:4600, gpuCost:4600, vram:128,bw:275,  tps7:60,  tps70:39,  maxB:200,tdp:125, notes:'Same GB10 Grace Blackwell chip as DGX Spark, 128GB LPDDR5x. $4,600. Ships with DGX OS + NVIDIA AI stack. Slightly pricier than Spark but tighter Dell ecosystem.'},
-  {id:'strixhalo',name:'Ryzen AI Max+ 395 (Strix Halo)', cat:'system',cost:1999,gpuCost:1999,vram:128,bw:215,  tps7:47,  tps70:5,   maxB:120,tdp:120, notes:'AMD Ryzen AI Max+ 395 — 40-CU RDNA 3.5 iGPU, 128GB LPDDR5x-8000 unified memory. Framework Desktop $1,999. ~215 GB/s effective bandwidth. 7B Q4 ~47 t/s (Vulkan), 70B Q4 ~5 t/s (ROCm/Vulkan — drivers still maturing). Runs Qwen3-30B-A3B MoE at ~72 t/s. Exceptional value-per-dollar; ROCm ecosystem improving fast.'},
+  {id:'strixhalo',name:'Ryzen AI Max+ 395 (Strix Halo)', cat:'system',cost:1999,gpuCost:1999,vram:128,bw:215,  tps7:47,  tps70:5,   maxB:120,tdp:120, notes:'AMD Ryzen AI Max+ 395 — 40-CU RDNA 3.5 iGPU, 128GB LPDDR5x-8000 unified memory. Framework Desktop $1,999. ~215 GB/s effective bandwidth. 7B Q4 ~47 t/s (Vulkan), 70B Q4 ~5 t/s (ROCm/Vulkan — drivers still maturing). Runs Qwen3-30B-A3B MoE at ~72 t/s. Exceptional value-per-dollar; ROCm ecosystem improving fast. ⚠️ LLMlimitation: ROCm still has fewer optimizations than CUDA; some models may run slower or have compatibility issues.'},
+
+  // ── AMD RDNA 4 ──
+  {id:'rx9070xt', name:'RX 9070 XT',                 cat:'amd',cost:1300, gpuCost:900,  vram:16, bw:1120, tps7:120, tps70:null,maxB:13, tdp:304, notes:'RDNA 4 flagship, 16GB GDDR6, 1120 GB/s. ~$900 street. Strong rasterization, but ROCm/LLVM drivers for LLM inference are still early — expect ~20-30% slower than equivalent NVIDIA on llama.cpp. Great for 7B, limited for 13B+.'},
+  {id:'rx9070',   name:'RX 9070',                    cat:'amd',cost:1100, gpuCost:750,  vram:16, bw:960,  tps7:105, tps70:null,maxB:13, tdp:260, notes:'RDNA 4 mid-range, 16GB GDDR6, 960 GB/s. ~$750 street. Similar LLM caveats as 9070 XT — ROCm support improving but not yet on par with NVIDIA. Good 7B runner, 13B marginal.'},
+
+  // ── AMD RDNA 3 ──
+  {id:'rx7900xtx',name:'RX 7900 XTX',                cat:'amd',cost:1400, gpuCost:950,  vram:24, bw:960,  tps7:95,  tps70:null,maxB:24, tdp:355, notes:'RDNA 3 flagship, 24GB GDDR6, 960 GB/s. ~$950 used. Best AMD VRAM-per-dollar. ⚠️ LLMlimitation: ROCm drivers less mature than NVIDIA — expect ~20-40% slower token throughput. 24GB handles 24B Q4 but speed lags behind equivalent NVIDIA.'},
+  {id:'rx7900xt', name:'RX 7900 XT',                 cat:'amd',cost:1100, gpuCost:700,  vram:20, bw:720,  tps7:80,  tps70:null,maxB:13, tdp:300, notes:'RDNA 3, 20GB GDDR6, 720 GB/s. ~$700 used. Decent 7B/13B option but ROCm limitations apply. Lower bandwidth than XTX hurts larger models.'},
+  {id:'rx7800xt', name:'RX 7800 XT',                 cat:'amd',cost:700,  gpuCost:400,  vram:16, bw:624,  tps7:72,  tps70:null,maxB:13, tdp:263, notes:'RDNA 3, 16GB GDDR6, 624 GB/s. ~$400 used. Budget 16GB option. ⚠️ LLMlimitation: ROCm inference still maturing; CUDA quantization (Q4, Q5, Q8) support varies. Works for 7B, 13B pushy.'},
+  {id:'rx7700xt', name:'RX 7700 XT',                 cat:'amd',cost:550,  gpuCost:320,  vram:12, bw:432,  tps7:60,  tps70:null,maxB:7,  tdp:245, notes:'RDNA 3, 12GB GDDR6, 432 GB/s. ~$320 used. Budget option. 12GB VRAM caps to 7B. LLM performance limited by both VRAM and ROCm maturity vs NVIDIA.'},
+  {id:'rx7600xt', name:'RX 7600 XT',                 cat:'amd',cost:400,  gpuCost:250,  vram:16, bw:512,  tps7:55,  tps70:null,maxB:13, tdp:190, notes:'RDNA 3, 16GB GDDR6, 512 GB/s. ~$250 used. Budget 16GB option. ⚠️ LLMlimitation: Lower TDP but also lower ROCm optimization. Fine for 7B Q4, 13B struggles with bandwidth.'},
+  {id:'rx7600',   name:'RX 7600',                    cat:'amd',cost:300,  gpuCost:180,  vram:8,  bw:288,  tps7:45,  tps70:null,maxB:7,  tdp:165, notes:'RDNA 3, 8GB GDDR6, 288 GB/s. ~$180 used. Entry-level. 8GB caps to 7B. Not ideal for LLMs given VRAM ceiling.'},
+
+  // ── AMD RDNA 2 (older, limited) ──
+  {id:'rx6950xt', name:'RX 6950 XT',                 cat:'amd',cost:800,  gpuCost:500,  vram:16, bw:576,  tps7:65,  tps70:null,maxB:13, tdp:335, notes:'RDNA 2 flagship, 16GB GDDR6, 576 GB/s. ~$500 used. Older architecture, less efficient. ⚠️ LLMlimitation: ROCm 5.x has RDNA2 support but far fewer optimizations. 7B viable, 13B marginal.'},
+  {id:'rx6800xt', name:'RX 6800 XT',                 cat:'amd',cost:650,  gpuCost:400,  vram:16, bw:512,  tps7:60,  tps70:null,maxB:13, tdp:300, notes:'RDNA 2, 16GB GDDR6, 512 GB/s. ~$400 used. Similar LLM constraints as 6950 XT — older ROCm support, lower bandwidth.'},
+  {id:'rx6700xt', name:'RX 6700 XT',                 cat:'amd',cost:350,  gpuCost:180,  vram:12, bw:384,  tps7:45,  tps70:null,maxB:7,  tdp:230, notes:'RDNA 2, 12GB GDDR6, 384 GB/s. ~$180 used. Budget 12GB. 7B cap, not great for LLMs vs NVIDIA alternatives.'},
   {id:'mini4x',   name:'4× Mac Mini M4 Pro (96GB)', cat:'cluster',cost:5200, gpuCost:5200, vram:96, bw:960,  tps7:70,  tps70:30,  maxB:90, tdp:160, notes:'4× M4 Pro Mac Minis daisy-chained via Thunderbolt 5 (exo/llama.cpp). 96GB combined. Thunderbolt bandwidth is the bottleneck: ~40 GB/s per link. ~70 t/s on 7B single-node; distributed 70B ~30 t/s. DeepSeek 671B ~5 t/s on 8-node cluster.'},
   {id:'mini8x',   name:'8× Mac Mini M4 Pro (192GB)',cat:'cluster',cost:10400,gpuCost:10400,vram:192,bw:1920, tps7:70,  tps70:20,  maxB:180,tdp:320, notes:'8× M4 Pro Minis (exo cluster). 192GB combined. Runs DeepSeek 671B at ~5 t/s, Llama 70B ~20 t/s. Thunderbolt inter-node bandwidth severely limits large-model speed. Great for model capacity, not raw speed.'},
 ];
@@ -49,7 +66,7 @@ DATA.forEach(d => {
 });
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let activeCats  = new Set(['nvidia','apple','system','cluster']);
+let activeCats  = new Set(['nvidia','amd','apple','system','cluster']);
 let activeVram  = new Set(['12','24','48','96','192','512']);
 let yMode       = 'max_params';
 let hlMode      = 'none';
