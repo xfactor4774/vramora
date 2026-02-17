@@ -960,20 +960,22 @@ function refresh() {
 }
 
 // ─── EVENTS ──────────────────────────────────────────────────────────────────
-document.querySelectorAll('.cf').forEach(cb => {
-  cb.addEventListener('change', () => {
-    if (cb.checked) activeCats.add(cb.dataset.cat);
-    else activeCats.delete(cb.dataset.cat);
+// Use event delegation to support both sidebar and mobile drawer
+document.addEventListener('change', e => {
+  if (e.target.classList.contains('cf')) {
+    if (e.target.checked) activeCats.add(e.target.dataset.cat);
+    else activeCats.delete(e.target.dataset.cat);
+    // Sync checkbox state across drawer and sidebar
+    document.querySelectorAll(`.cf[data-cat="${e.target.dataset.cat}"]`).forEach(cb => cb.checked = e.target.checked);
     refresh();
-  });
-});
-
-document.querySelectorAll('.vf').forEach(cb => {
-  cb.addEventListener('change', () => {
-    if (cb.checked) activeVram.add(cb.dataset.vram);
-    else activeVram.delete(cb.dataset.vram);
+  }
+  if (e.target.classList.contains('vf')) {
+    if (e.target.checked) activeVram.add(e.target.dataset.vram);
+    else activeVram.delete(e.target.dataset.vram);
+    // Sync checkbox state across drawer and sidebar
+    document.querySelectorAll(`.vf[data-vram="${e.target.dataset.vram}"]`).forEach(cb => cb.checked = e.target.checked);
     refresh();
-  });
+  }
 });
 
 document.getElementById('yMode').addEventListener('change', e => { yMode = e.target.value; refresh(); });
@@ -1030,6 +1032,35 @@ function toggleSidebar() {
   const open = sb.classList.toggle('open');
   btn.textContent = open ? '✕ Close' : '⚙️ Filters';
 }
+
+// Mobile drawer toggle (full-screen on mobile)
+function toggleDrawer() {
+  const drawer = document.getElementById('sidebarDrawer');
+  const isOpen = drawer.classList.contains('open');
+  drawer.classList.toggle('open');
+  
+  // Sync cost mode checkbox
+  const costMain = document.getElementById('costMode');
+  const costDrawer = document.getElementById('costModeDrawer');
+  if (costDrawer) costDrawer.checked = costMain ? costMain.checked : false;
+  
+  // Prevent body scroll when drawer is open
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+
+// Sync drawer checkbox changes back to main
+document.addEventListener('DOMContentLoaded', () => {
+  const costDrawer = document.getElementById('costModeDrawer');
+  const costMain = document.getElementById('costMode');
+  if (costDrawer && costMain) {
+    costDrawer.addEventListener('change', () => {
+      costMain.checked = costDrawer.checked;
+      costMain.dispatchEvent(new Event('change'));
+    });
+    // Sync initial state
+    costDrawer.checked = costMain.checked;
+  }
+});
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 function applyTheme(light) {
