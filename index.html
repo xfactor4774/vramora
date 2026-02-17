@@ -458,7 +458,7 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
   header { padding: 4px 14px; }
   .tagline { display: none; }
   .layout { flex-direction: row; height: calc(100vh - 36px); }
-  .sidebar { display: none !important; }
+  .sidebar { display: flex !important; width: 180px; min-width: 180px; flex-direction: column; padding: 8px; overflow-y: auto; }
   .main { display: flex; flex-direction: column; height: 100%; }
   .toolbar { padding: 4px 10px; gap: 6px; min-height: 0; flex-shrink: 0; }
   .toolbar label { display: none; }
@@ -469,6 +469,10 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
   canvas#chart { height: 100% !important; }
   .stat-row { display: none !important; }
   .hw-estimate-note { display: none !important; }
+  /* Hide drawer and FAB in landscape */
+  .sidebar-drawer { display: none !important; }
+  .sidebar-toggle { display: none !important; }
+  body { overflow: auto; }
 }
 </style>
 </head>
