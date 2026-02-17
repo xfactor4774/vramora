@@ -64,8 +64,8 @@ body.light .toolbar label{color:#9e8e7e}
 body.light .toolbar select{background:#fff;border-color:#e8e4de;color:#3d2b1a}
 body.light .toolbar select option{background:#fff;color:#3d2b1a}
 body.light .vt{background:#fff;border-color:#e8e4de}
-body.light .vb{color:#9e8e7e}
-body.light .vb.active{background:#d97706;color:#fff}
+body.light .vb,body.light .zm{color:#9e8e7e}
+body.light .vb.active,body.light .zm.active{background:#d97706;color:#fff}
 
 body.light .model-banner{background:#fdf6e3;border-bottom-color:#f0e0b0;color:#92610a}
 body.light .model-banner button{border-color:#f0e0b0;color:#b08040}
@@ -107,8 +107,9 @@ body.light .sc .sb2{color:#b0a090}
 .toolbar select:hover{border-color:#7c6af7}
 .toolbar select option{background:#18181f;color:#e0e0e0;padding:8px}
 .vt{margin-left:auto;display:flex;background:#18181f;border:1px solid #2a2a3a;border-radius:7px;overflow:hidden}
-.vb{padding:5px 14px;font-size:.74rem;cursor:pointer;color:#555;border:none;background:transparent;transition:all .15s}
-.vb.active{background:#7c6af7;color:#fff}
+.vb,.zm{padding:5px 14px;font-size:.74rem;cursor:pointer;color:#888;border:none;background:transparent;transition:all .15s}
+.vb.active,.zm.active{background:#7c6af7;color:#fff}
+.vb:hover:not(.active),.zm:hover:not(.active){background:#252530;color:#aaa}
 
 /* model banner */
 .model-banner{display:flex;align-items:center;gap:12px;padding:7px 20px;background:#0d1f1a;border-bottom:1px solid #1a3328;font-size:.75rem;color:#7ab8a0}
@@ -869,11 +870,13 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
         </div>
       </div>
 
-      <button class="share-btn" onclick="zoomIn()" title="Zoom in">＋</button>
-      <button class="share-btn" onclick="zoomOut()" title="Zoom out">－</button>
-      <button class="share-btn" id="resetZoomBtn" onclick="resetZoom()" style="display:none" title="Reset zoom">⟳ Reset</button>
-      <button class="share-btn pan-btn" id="panModeBtn" onclick="togglePanMode()" title="Toggle touch pan mode">✋ Pan</button>
-      <button class="share-btn" id="shareBtn" onclick="copyShareLink()">🔗 Share view</button>
+      <div class="vt" id="zoomControls">
+        <button class="zm" onclick="zoomIn()" title="Zoom in">＋</button>
+        <button class="zm" onclick="zoomOut()" title="Zoom out">－</button>
+        <button class="zm" id="resetZoomBtn" onclick="resetZoom()" style="display:none" title="Reset zoom">⟳</button>
+        <button class="zm pan-btn" id="panModeBtn" onclick="togglePanMode()" title="Toggle touch pan mode">✋</button>
+      </div>
+      <button class="share-btn" id="shareBtn" onclick="copyShareLink()">🔗 Share</button>
       <div class="vt">
         <button class="vb active" id="btn-chart" onclick="setView('chart')">📈 Chart</button>
         <button class="vb" id="btn-table" onclick="setView('table')">📋 Table</button>
