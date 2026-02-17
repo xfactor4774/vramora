@@ -87,7 +87,7 @@ body.light .sc .sb2{color:#b0a090}
 
 /* ── SIDEBAR ── */
 .sidebar{width:222px;min-width:180px;background:#111118;border-right:1px solid #1e1e2e;padding:14px 12px;overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
-.sidebar-toggle{display:none;background:none;border:1px solid #222;color:#555;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.72rem;transition:all .15s;white-space:nowrap}
+.sidebar-toggle{display:flex;background:#7c6af7;border:none;color:#fff;padding:12px 18px;border-radius:24px;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .15s;white-space:nowrap;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(124,106,247,0.3)}
 .sidebar-toggle:hover{color:#aaa;border-color:#444}
 .sb h3{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:#2dd4bf;margin-bottom:8px}
 .fl label{display:flex;align-items:center;gap:7px;font-size:.77rem;color:#888;cursor:pointer;padding:2px 0;user-select:none}
@@ -324,25 +324,22 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
   .stat-row .sc:last-child{grid-column:span 1}
 }
 
-/* ── MOBILE FULL-SCREEN DRAWER FOR FILTERS ── */
-.sidebar-drawer { display: none; }
-
-@media (max-width: 768px) {
-  /* Full-screen drawer overlay */
-  .sidebar-drawer {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #0f0f13;
-    z-index: 1000;
-    overflow-y: auto;
-    padding: 0;
-    flex-direction: column;
-  }
-  .sidebar-drawer.open { display: flex; }
+/* ── FULL-SCREEN DRAWER FOR FILTERS (desktop + mobile) ── */
+.sidebar-drawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #0f0f13;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 0;
+  flex-direction: column;
+}
+.sidebar-drawer.open { display: flex; }
+body.light .sidebar-drawer { background: #faf9f7; }
   body.light .sidebar-drawer { background: #faf9f7; }
   
   /* Drawer header with close button */
@@ -422,8 +419,8 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
     z-index: 999;
   }
   
-  /* Hide old sidebar on mobile */
-  .layout > .sidebar { display: none !important; }
+  /* Hide old sidebar when drawer is open */
+  .sidebar-drawer.open ~ .layout .sidebar { display: none; }
   
   /* Adjust main content for FAB */
   .main { padding-bottom: 80px; }
@@ -471,8 +468,6 @@ body.light .icon-btn:hover{color:#5c4a3a;border-color:#c9b99a}
   canvas#chart { height: 100% !important; }
   .stat-row { display: none !important; }
   .hw-estimate-note { display: none !important; }
-  /* Hide drawer and FAB in landscape */
-  .sidebar-drawer { display: none !important; }
   .sidebar-toggle { display: none !important; }
   body { overflow: auto; }
 }
